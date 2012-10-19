@@ -2,7 +2,7 @@ MoM source code examples
 
 Pluck
 
-	Karpluss-Strong string model code
+	Karplus-Strong string synthesis
 
 	includes a realtime harp tuned to a just scale
 
