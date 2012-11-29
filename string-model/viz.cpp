@@ -36,9 +36,18 @@ string g_usage;
 bool  autorotate = false;
 float autorotateAngle = 0.0;
 
+class StringState;
+StringState *theString;
+RtAudio::StreamParameters parameters;
+unsigned int sampleRate = 44100;
+unsigned int bufferFrames = 256; // 256 sample frames
+RtAudio dac;
+//
 //////
-// physical string model - 
 
+//
+// physical string model - 
+//
 
 
 struct StringState {
@@ -46,7 +55,11 @@ struct StringState {
     : numMasses(n), 
       Ktension(_Ktension),
       Kdamping(_Kdamping),
-      simulationStepsPerSample(_stepspersample)
+      simulationStepsPerSample(_stepspersample),
+      vibratorOn ( false ),
+      vibratorFreq ( 1000.0f ),
+      vibratorAmplitude ( 0.001f ),
+      t ( 0.0f )
       
   {
     std::cout << "N,K_t,K_d,ss: " 
@@ -55,23 +68,32 @@ struct StringState {
 	      << Kdamping  << ',' 
 	      << simulationStepsPerSample
 	      << std::endl;
+
     // allocate displacement and velocity arrays
+
     y = new float[numMasses];
     yold = new float[numMasses];
     v = new float[numMasses];
+
     // initialize displacements and velocities
+
     for (int i = 0; i < numMasses; i++ ) {
       v[i]  = 0.0f;
       yold[i] = y[i] = 0.0f;
     }
+
     // init the mutex
     pthread_mutex_init ( &lock, NULL );
+
     // init the RNG
     seed = (unsigned int) time(NULL);
+
     // pluck it
     pluck();
   }
+
   ~StringState() { delete y; delete yold, delete v; }
+
 
   void print() {
     pthread_mutex_lock ( &lock );
@@ -84,6 +106,8 @@ struct StringState {
     std::cout << std::endl;
     pthread_mutex_unlock ( &lock );
   }
+
+
   void reset() {
     pthread_mutex_lock ( &lock );
     for (int i = 0 ; i < numMasses; i++ ) {
@@ -91,6 +115,8 @@ struct StringState {
     }
     pthread_mutex_unlock ( &lock );
   }
+
+
   void pluck() {
       //      if (i == numMasses/2 )
       //	yold[i] = 0.5; // impulse at string center
@@ -114,12 +140,17 @@ struct StringState {
     }
     pthread_mutex_unlock ( &lock );
   }
+
   void pluckvel() {
     int pluckAt = float(rand_r(&seed) / float(RAND_MAX)) * (numMasses-2) + 1;
     std::cout << pluckAt << std::endl;
     pthread_mutex_lock( &lock );
     v[pluckAt] = 3e-4 * Ktension;
     pthread_mutex_unlock ( &lock );
+  }
+
+  void toggleVibrator() {
+    vibratorOn = !vibratorOn;
   }
 
   int simulationStepsPerSample;
@@ -129,6 +160,10 @@ struct StringState {
   float *y, *yold, *v;
   unsigned int seed;
   pthread_mutex_t lock;
+  bool   vibratorOn;
+  float vibratorFreq;
+  float vibratorAmplitude;
+  float t;
 };
 
 
@@ -158,7 +193,13 @@ stringmodel ( void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
     for ( i = 0; i < n; i++ ) {
       //   if boundary element
       //      handle boundary element
-      if ( i == 0 || i == s->numMasses-1 ) {
+      if ( i == 0 ) {
+	if ( s->vibratorOn ) {
+	  s->y[i] = s->vibratorAmplitude * sin ( s->vibratorFreq * s->t );
+	  s->t += (1.0 / sampleRate) / s->simulationStepsPerSample;
+ 
+	}
+      } else if ( i == s->numMasses-1 ) {
       } else {
 	//   else
 	//      compute acceleration as scaled sum of differences with neighbors
@@ -199,12 +240,6 @@ stringmodel ( void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
 
 //////////////////////////////
 // 
-StringState *theString;
-RtAudio::StreamParameters parameters;
-unsigned int sampleRate = 44100;
-unsigned int bufferFrames = 256; // 256 sample frames
-RtAudio dac;
-//
 
 
 /////////////////////////////
@@ -334,8 +369,13 @@ void map_to_sphere(GLfloat out[3], int x, int y) {
 }
 
 void mouse(int button, int state, int x, int y) {
-	if(button == GLUT_LEFT_BUTTON and state == GLUT_DOWN) {
+	if(button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
 		map_to_sphere(g_start_point, x,y );
+	}
+	if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN) {
+	  float amt = g_win_height - y;
+	  amt *= 10.0;
+	  theString->vibratorFreq = amt;
 	}
 }
 
@@ -369,6 +409,8 @@ void mouse_motion(int x, int y) {
 		glutPostRedisplay();
 	}
 }
+
+
 
 void draw_axes() {
 	glPushAttrib(GL_ALL_ATTRIB_BITS);
@@ -408,6 +450,8 @@ void drawString (StringState *s)
     y[i] = s->y[i];
   pthread_mutex_unlock(&s->lock);
 
+  glColor3f ( 1,1,1 );
+  glLineWidth ( 3.0 );
   glBegin(GL_LINE_STRIP);
   for (int i = 0; i < n; i++ ) {
     float vel = fabs(s->v[i]);
@@ -416,6 +460,15 @@ void drawString (StringState *s)
   }  
   glEnd();
 
+  if ( s->vibratorOn ) { 
+    glColor3f ( 1, 0, 0 );
+    glLineWidth ( 7.0 );
+    glBegin ( GL_LINES );
+    glVertex3f ( -10*xscale + xoffset, 0, y[0]*yscale + yoffset );
+    glVertex3f ( xoffset, 0, y[0]*yscale + yoffset );
+    glEnd ();
+  }
+
   delete y;
 
 }
@@ -423,6 +476,10 @@ void drawString (StringState *s)
 
 void display(void)
 {
+   //
+   // XXX TODO - move to OpenGL 3.2 or above (glDrawArrays(...))
+   //
+
    glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
    glPushMatrix();
@@ -475,6 +532,7 @@ void keyboard (unsigned char key, int x, int y)
   case 'p' : theString->pluckvel(); break;
   case 'r' : theString->reset(); break;
   case 'd' : theString->print(); break;
+  case 'v' : theString->toggleVibrator(); break;
   case 27: /* ESC */
     try {
       // Stop the stream
