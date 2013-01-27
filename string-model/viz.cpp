@@ -223,7 +223,7 @@ StringModel::computeSamples ( float *soundout, unsigned int nBufferFrames )
 	sum = sum < 0.0 ? -1.0 : 1.0;
 	//	std::cout << "! " << sum << std::endl;
       }
-#if 0
+#if 1
       // summed output
       *soundout++ = sum;
       *soundout++ = sum;
@@ -333,6 +333,7 @@ void init(int argc, char **argv) {
     dac.startStream();
   }
   catch ( RtError& e ) {
+    std::cout << "\nexception on dac:\n";
     e.printMessage();
     exit(0);
   }
