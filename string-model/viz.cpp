@@ -1,3 +1,6 @@
+//
+// viz.cpp - realtime vibrating string experimental apparatus
+// 
 /*
  * trackball.cpp
  * Dave Rogers, modified from
@@ -36,11 +39,11 @@ string g_usage;
 bool  autorotate = false;
 float autorotateAngle = 0.0;
 
-class StringState;
-StringState *theString;
+class StringModel;
+StringModel               *theString;
 RtAudio::StreamParameters parameters;
-unsigned int sampleRate = 44100;
-unsigned int bufferFrames = 256; // 256 sample frames
+unsigned int              sampleRate = 44100;
+unsigned int              bufferFrames = 256; // 256 sample frames
 RtAudio dac;
 //
 //////
@@ -50,19 +53,19 @@ RtAudio dac;
 //
 
 
-struct StringState {
-  StringState ( int n, float _Ktension, float _Kdamping, int _stepspersample )
+struct StringModel {
+  StringModel ( int n, float _Ktension, float _Kdamping, int _stepspersample )
     : numMasses(n), 
       Ktension(_Ktension),
       Kdamping(_Kdamping),
       simulationStepsPerSample(_stepspersample),
       vibratorOn ( false ),
-      vibratorFreq ( 1000.0f ),
+      vibratorFreq ( 100.0f ),
       vibratorAmplitude ( 0.001f ),
-      t ( 0.0f )
+      vibratorPhase ( 0.0 )
       
   {
-    std::cout << "N,K_t,K_d,ss: " 
+    std::cout << "StringModel N,K_t,K_d,ss: " 
 	      << numMasses << ',' 
 	      << Ktension  << ',' 
 	      << Kdamping  << ',' 
@@ -92,7 +95,7 @@ struct StringState {
     pluck();
   }
 
-  ~StringState() { delete y; delete yold, delete v; }
+  ~StringModel() { delete y; delete yold, delete v; }
 
 
   void print() {
@@ -118,32 +121,24 @@ struct StringState {
 
 
   void pluck() {
-      //      if (i == numMasses/2 )
-      //	yold[i] = 0.5; // impulse at string center
-    //  impluse at string center
-    //    yold[numMasses/2] = 0.25;
     int pluckAt = float(rand_r(&seed) / float(RAND_MAX)) * (numMasses-2) + 1;
-    std::cout << pluckAt << std::endl;
+    //    std::cout << pluckAt << std::endl;
     pthread_mutex_lock( &lock );
-    //    yold[pluckAt] = 0.1;
-    //    v[pluckAt] = 5e-3;
     float maxDisp = 0.001;
     float upSlope = maxDisp / pluckAt;
     float downSlope = maxDisp / (numMasses-pluckAt);
     for (int i = 1; i< numMasses-2;i++ ) {
       if (i <= pluckAt )
 	yold[i] = i*upSlope;
-      //v[i] = i*upSlope;
       else
 	yold[i] = maxDisp - (i-pluckAt)*downSlope; 
-	//v[i] = maxDisp - (i-pluckAt)*downSlope; 
     }
     pthread_mutex_unlock ( &lock );
   }
 
   void pluckvel() {
     int pluckAt = float(rand_r(&seed) / float(RAND_MAX)) * (numMasses-2) + 1;
-    std::cout << pluckAt << std::endl;
+    //    std::cout << pluckAt << std::endl;
     pthread_mutex_lock( &lock );
     v[pluckAt] = 3e-4 * Ktension;
     pthread_mutex_unlock ( &lock );
@@ -153,6 +148,10 @@ struct StringState {
     vibratorOn = !vibratorOn;
   }
 
+  static int audioCallback ( void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
+			   double streamTime, RtAudioStreamStatus status, void *userData );
+
+  void computeSamples ( float *outputBuffer, unsigned int nBufferFrames );
   int simulationStepsPerSample;
   int numMasses;
   float Ktension;
@@ -163,14 +162,86 @@ struct StringState {
   bool   vibratorOn;
   float vibratorFreq;
   float vibratorAmplitude;
+  float vibratorPhase;
   float t;
 };
 
+// pure c++ audio computation
+class Parameter {
+  Parameter() : targetValue(0.0f),
+		previousValue ( 0.0f )
+  {}
+  inline float getValueAt(float u) {
+    return lastValue = u * targetValue + (1.0f-u) * previousValue;
+  }
+  inline void setTargetValue( float target ) {
+    targetValue = target;
+    previousValue = lastValue;
+  }
+  inline void setCurrentValue ( float v ) {
+    previousValue = lastValue = v;
+  }
+  float targetValue;
+  float previousValue;
+  float lastValue;
+};
+
+void
+StringModel::computeSamples ( float *soundout, unsigned int nBufferFrames )
+{
+  int iters = nBufferFrames * simulationStepsPerSample;
+
+  for ( int t = 0; t < iters; t++ ) {
+
+    float sum = 0;
+    int n = numMasses;
+    int i;
+    float accel;
+    if ( vibratorOn ) {
+      // XXX interpolate params
+      y[0] = vibratorAmplitude * sin ( vibratorFreq * vibratorPhase );
+      vibratorPhase += (1.0 / sampleRate) / simulationStepsPerSample;
+      while ( vibratorPhase > 2*M_PI )
+	vibratorPhase -= 2*M_PI;
+    }
+
+    // XXX not working : #pragma omp parallel for reduction(+:sum) private(accel)
+    for ( i = 1; i < n-1; i++ ) {
+	accel = Ktension * (yold[i+1] + yold[i-1] - 2*yold[i]);
+	v[i] += accel;
+	v[i] *= Kdamping;
+	y[i] = yold[i] + v[i];
+	sum = sum + y[i];
+    }
+
+    float *tmp = y;
+    y = yold;
+    yold = tmp;
+
+    if ( t % simulationStepsPerSample == 0 ) {
+      if (fabs(sum) > 1.0) {
+	sum = sum < 0.0 ? -1.0 : 1.0;
+	//	std::cout << "! " << sum << std::endl;
+      }
+#if 0
+      // summed output
+      *soundout++ = sum;
+      *soundout++ = sum;
+#else
+      // per channel pickup placement
+      *soundout++ = 10.0f * yold[numMasses/13];
+      *soundout++ = 10.0f * yold[numMasses/5];
+#endif
+    }
+
+  }
+
+}
 
 // the RtAudio callback
-// *** TODO: MOVE INTO OBJECT!
+
 int
-stringmodel ( void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
+StringModel::audioCallback ( void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
 	 double streamTime, RtAudioStreamStatus status, void *userData )
 {
 
@@ -178,61 +249,11 @@ stringmodel ( void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
     std::cout << "string -- overflow" << std::endl;
 
   float *soundout = (float *)outputBuffer;
-  StringState *s = (StringState *)userData;
+  StringModel *s = (StringModel *)userData;
 
   pthread_mutex_lock(&(s->lock));
 
-  int iters = nBufferFrames * s->simulationStepsPerSample;
-  for ( int t = 0; t < iters; t++ ) {
-    // for each mass element
-    float sum = 0;
-    int n = s->numMasses;
-    int i;
-    float accel;
-    //#pragma omp parallel for reduction(+:sum) private(accel)
-    for ( i = 0; i < n; i++ ) {
-      //   if boundary element
-      //      handle boundary element
-      if ( i == 0 ) {
-	if ( s->vibratorOn ) {
-	  s->y[i] = s->vibratorAmplitude * sin ( s->vibratorFreq * s->t );
-	  s->t += (1.0 / sampleRate) / s->simulationStepsPerSample;
- 
-	}
-      } else if ( i == s->numMasses-1 ) {
-      } else {
-	//   else
-	//      compute acceleration as scaled sum of differences with neighbors
-	accel = s->Ktension * (s->yold[i+1] + s->yold[i-1] 
-				     - 2*s->yold[i]);
-	//      add accel to velocity
-	s->v[i] += accel;
-	s->v[i] *= s->Kdamping;
-	//      add velocity to position
-	s->y[i] = s->yold[i] + s->v[i];
-	sum = sum + s->y[i];
-      }
-    }
-    //   swap displacement buffers
-    float *tmp = s->y;
-    s->y = s->yold;
-    s->yold = tmp;
-
-    if ( t % s->simulationStepsPerSample == 0 ) {
-      if (fabs(sum) > 1.0) {
-	sum = sum < 0.0 ? -1.0 : 1.0;
-	std::cout << "! " << sum << std::endl;
-      }
-#if 1
-      *soundout++ = sum;
-      *soundout++ = sum;
-#else
-      *soundout++ = 10.0f * s->yold[s->numMasses/13];
-      *soundout++ = 10.0f * s->yold[s->numMasses/5];
-#endif
-    }
-
-  }
+  s->computeSamples ( static_cast<float*>(outputBuffer), nBufferFrames );
   
   pthread_mutex_unlock ( &(s->lock) );
   return 0;
@@ -242,30 +263,30 @@ stringmodel ( void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
 // 
 
 
-/////////////////////////////
-// each worker thread gets a portion of the string
-pthread_cond_t  workReady = PTHREAD_COND_INITIALIZER;
-pthread_cond_t  workDone = PTHREAD_COND_INITIALIZER;
-float *audioBuffer;
-int nBufferFrames;
-int numThreads;
-void *threadFunc ( void * arg )
-{
-  long int id = (long int)(arg);
-  int chunkSize = theString->numMasses / numThreads;
-  int myStart = id * chunkSize;
+// /////////////////////////////
+// // each worker thread gets a portion of the string
+// pthread_cond_t  workReady = PTHREAD_COND_INITIALIZER;
+// pthread_cond_t  workDone = PTHREAD_COND_INITIALIZER;
+// float *audioBuffer;
+// int nBufferFrames;
+// int numThreads;
+// void *threadFunc ( void * arg )
+// {
+//   long int id = (long int)(arg);
+//   int chunkSize = theString->numMasses / numThreads;
+//   int myStart = id * chunkSize;
 
-  if (myStart + chunkSize > theString->numMasses )
-    chunkSize = theString->numMasses - myStart;
+//   if (myStart + chunkSize > theString->numMasses )
+//     chunkSize = theString->numMasses - myStart;
 
-  // wait for data ready
+//   // wait for data ready
 
-  /* for each buffer frame:
-       render my section into y
-       compute my sum  ( master does the global sum )
+//   /* for each buffer frame:
+//        render my section into y
+//        compute my sum  ( master does the global sum )
        
-  */
-}
+//   */
+// }
 
 
 
@@ -286,9 +307,7 @@ int main(int, char **);
 void init(int argc, char **argv) {
 
   /////
-  //  StringState theString ( 600, 0.75, 0.99999, 4 );
-  // StringState theString ( 600, 0.5, 0.99999, 4 );
-  theString = new StringState ( 600, 0.5, 0.99999, 4 );
+  theString = new StringModel ( 1000, 0.5, 0.99999, 8 );
 
   // *** test the rtaudio callback
   if ( dac.getDeviceCount() < 1 ) {
@@ -303,9 +322,14 @@ void init(int argc, char **argv) {
   bufferFrames = 256; // 256 sample frames
 
   try { 
-    dac.openStream ( &parameters, NULL, RTAUDIO_FLOAT32,
-		     sampleRate, &bufferFrames, 
-		     &stringmodel, (void *)theString );
+    dac.openStream ( &parameters, 
+		     NULL, 
+		     RTAUDIO_FLOAT32,
+		     sampleRate, 
+		     &bufferFrames, 
+		     // &stringmodel, 
+		     StringModel::audioCallback,
+		     (void *)theString );
     dac.startStream();
   }
   catch ( RtError& e ) {
@@ -435,7 +459,7 @@ void draw_axes() {
 }
 
 
-void drawString (StringState *s)
+void drawString (StringModel *s)
 {
   int n = s->numMasses;
   float *y = new float[n];
