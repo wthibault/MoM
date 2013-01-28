@@ -17,7 +17,12 @@
 #include <ctime>
 #include <vector>
 #include <omp.h>
+
+#ifdef __APPLE__
+#include <GLUT/glut.h>
+#else
 #include <GL/glut.h>
+#endif
 
 #include "RtAudio.h"
 
@@ -223,7 +228,7 @@ StringModel::computeSamples ( float *soundout, unsigned int nBufferFrames )
 	sum = sum < 0.0 ? -1.0 : 1.0;
 	//	std::cout << "! " << sum << std::endl;
       }
-#if 0
+#if 1
       // summed output
       *soundout++ = sum;
       *soundout++ = sum;
@@ -327,7 +332,6 @@ void init(int argc, char **argv) {
 		     RTAUDIO_FLOAT32,
 		     sampleRate, 
 		     &bufferFrames, 
-		     // &stringmodel, 
 		     StringModel::audioCallback,
 		     (void *)theString );
     dac.startStream();
