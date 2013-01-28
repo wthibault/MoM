@@ -226,7 +226,7 @@ StringModel::computeSamples ( float *soundout, unsigned int nBufferFrames )
     if ( t % simulationStepsPerSample == 0 ) {
       if (fabs(sum) > 1.0) {
 	sum = sum < 0.0 ? -1.0 : 1.0;
-	//	std::cout << "! " << sum << std::endl;
+	std::cout << "! " << sum;// << std::endl;
       }
 #if 1
       // summed output
@@ -337,6 +337,7 @@ void init(int argc, char **argv) {
     dac.startStream();
   }
   catch ( RtError& e ) {
+    std::cout << "\nexception on dac:\n";
     e.printMessage();
     exit(0);
   }
