@@ -3,12 +3,16 @@ $(info $(HOST_PLATFORM))
 
 ifeq   "$(HOST_PLATFORM)" "i686-apple-darwin11"
 RTAUDIO_DIR = /Users/tebo/Software/rtaudio-4.0.10
-CCFLAGS = -fopenmp -O3
+CCFLAGS = -fopenmp -O3 
+LIBS = -framework GLUT -framework OpenGL
 endif
 
 ifeq   "$(HOST_PLATFORM)" "x86_64-linux-gnu"
 #RTAUDIO_DIR = /home/tebo/Software/rtaudio-4.0.10
 CCFLAGS = -fopenmp -O3
+LIBS = 		-lglut -lGL -lGLU \
+		-lpthread
+
 endif
 
 all : rtstring viz string string-omp
@@ -22,8 +26,7 @@ viz : viz.cpp util.o
 	g++ $(CCFLAGS) viz.cpp -o viz \
 		util.o \
 		-I$(RTAUDIO_DIR) -L$(RTAUDIO_DIR) -lrtaudio \
-		-lglut -lGL -lGLU \
-		-lpthread
+		$(LIBS)
 
 util.o : util.cpp
 

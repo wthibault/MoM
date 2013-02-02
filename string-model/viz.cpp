@@ -17,7 +17,12 @@
 #include <ctime>
 #include <vector>
 #include <omp.h>
+
+#ifdef __APPLE__
+#include <GLUT/glut.h>
+#else
 #include <GL/glut.h>
+#endif
 
 #include "RtAudio.h"
 
@@ -402,7 +407,6 @@ void init(int argc, char **argv) {
 		     RTAUDIO_FLOAT32,
 		     sampleRate, 
 		     &bufferFrames, 
-		     // &stringmodel, 
 		     StringModel::audioCallback,
 		     (void *)theString );
     dac.startStream();
@@ -442,6 +446,7 @@ void init(int argc, char **argv) {
   std::cout << "p to pluck\n";
   std::cout << "r to reset\n";
   std::cout << "d to dump velocities\n";
+  std::cout << "f/F to change vibrator freq\n";
   std::cout << "ESC to quit.\n";
 }
 
@@ -633,6 +638,12 @@ void keyboard (unsigned char key, int x, int y)
   case 'r' : theString->reset(); break;
   case 'd' : theString->print(); break;
   case 'v' : theString->toggleVibrator(); break;
+  case 'f' : theString->vibratorFreq *= 0.99; 
+    std::cout << "vib freq = " << theString->vibratorFreq << std::endl;
+    break;
+  case 'F' : theString->vibratorFreq /= 0.99; 
+    std::cout << "vib freq = " << theString->vibratorFreq << std::endl;
+    break;
   case 27: /* ESC */
     try {
       // Stop the stream
