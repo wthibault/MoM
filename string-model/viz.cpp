@@ -53,6 +53,89 @@ RtAudio dac;
 //
 //////
 
+/////////////////////////////////////////////////////////////////////////////////////////
+// limiter code from musicdsp.org by thevinn at yahoo dot com
+
+class EnvelopeFollower
+{
+public:
+    EnvelopeFollower();
+
+    void Setup( double attackMs, double releaseMs, int sampleRate );
+
+    template<class T, int skip>
+    void Process( size_t count, const T *src );
+
+    double envelope;
+
+protected:
+    double a;
+    double r;
+};
+
+//----------
+
+inline EnvelopeFollower::EnvelopeFollower()
+{
+    envelope=0;
+}
+
+inline void EnvelopeFollower::Setup( double attackMs, double releaseMs, int sampleRate )
+{
+    a = pow( 0.01, 1.0 / ( attackMs * sampleRate * 0.001 ) );
+    r = pow( 0.01, 1.0 / ( releaseMs * sampleRate * 0.001 ) );
+}
+
+template<class T, int skip>
+void EnvelopeFollower::Process( size_t count, const T *src )
+{
+    while( count-- )
+    {
+        double v=::fabs( *src );
+        src+=skip;
+        if( v>envelope )
+            envelope = a * ( envelope - v ) + v;
+        else
+            envelope = r * ( envelope - v ) + v;
+    }
+}
+
+//----------
+
+struct Limiter
+{
+    void Setup( double attackMs, double releaseMs, int sampleRate );
+
+    template<class T, int skip>
+    void Process( size_t nSamples, T *dest );
+
+private:
+    EnvelopeFollower e;
+};
+
+//----------
+
+inline void Limiter::Setup( double attackMs, double releaseMs, int sampleRate )
+{
+    e.Setup( attackMs, releaseMs, sampleRate );
+}
+
+template<class T, int skip>
+void Limiter::Process( size_t count, T *dest )
+{
+    while( count-- )
+    {
+        T v=*dest;
+        // don't worry, this should get optimized
+        e.Process<T, skip>( 1, &v );
+        if( e.envelope>1 )
+            *dest=*dest/e.envelope;
+        dest+=skip;
+    }
+}
+/////////////////////////////////////////////////////////////////////////////////////////
+
+
 //
 // physical string model - 
 //
@@ -80,7 +163,7 @@ struct StringModel {
       vibratorFreq ( 100.0f ),
       vibratorAmplitude ( 0.001f ),
       vibratorPhase ( 0.0 ),
-      compressionThreshold ( -10.0 ),
+      compressionThreshold ( -20.0 ),
       compressionRatio ( 10.0f )
   {
     std::cout << "StringModel N,K_t,K_d,ss: " 
@@ -102,6 +185,9 @@ struct StringModel {
       v[i]  = 0.0f;
       yold[i] = y[i] = 0.0f;
     }
+
+    // init the limiter
+    theLimiter.Setup ( 10.0, 300.0, 44100 );
 
     // init the mutex
     pthread_mutex_init ( &lock, NULL );
@@ -188,6 +274,8 @@ struct StringModel {
 
   float compressionThreshold;
   float compressionRatio;
+
+  Limiter theLimiter;
 };
 
 
@@ -196,6 +284,7 @@ struct StringModel {
 
 
 
+// simple lerper class
 class Parameter {
   Parameter() : targetValue(0.0f),
 		previousValue ( 0.0f )
@@ -259,9 +348,6 @@ StringModel::computeSamples ( float *soundout, unsigned int nBufferFrames )
 	std::cout << "! " << sum;// << std::endl;
       }
 
-
-
-
 #if 1
       // summed output
       *buf++ = sum;
@@ -275,6 +361,9 @@ StringModel::computeSamples ( float *soundout, unsigned int nBufferFrames )
 
   }
 
+#if 1
+  theLimiter.Process<float,1> ( nBufferFrames * 2, soundout );
+#else
   // limiting/compression
   float rmsLevel = levelDetect ( soundout, nBufferFrames );
   int numFrames = nBufferFrames;
@@ -292,6 +381,7 @@ StringModel::computeSamples ( float *soundout, unsigned int nBufferFrames )
     *sample++ = *sample * gain;
     *sample++ = *sample * gain;
   }
+#endif
 }
 
 inline
