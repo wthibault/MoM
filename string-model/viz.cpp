@@ -52,6 +52,18 @@ RtAudio dac;
 // physical string model - 
 //
 
+inline
+float
+linearToDecibels ( float amp ) {
+  return 20.0f * log10 ( amp );
+}
+
+inline
+float
+decibelsToLinear ( float db ) {
+  return pow ( 10.0, (0.05 * db) );
+}
+
 
 struct StringModel {
   StringModel ( int n, float _Ktension, float _Kdamping, int _stepspersample )
@@ -62,8 +74,9 @@ struct StringModel {
       vibratorOn ( false ),
       vibratorFreq ( 100.0f ),
       vibratorAmplitude ( 0.001f ),
-      vibratorPhase ( 0.0 )
-      
+      vibratorPhase ( 0.0 ),
+      compressionThreshold ( -10.0 ),
+      compressionRatio ( 10.0f )
   {
     std::cout << "StringModel N,K_t,K_d,ss: " 
 	      << numMasses << ',' 
@@ -152,6 +165,9 @@ struct StringModel {
 			   double streamTime, RtAudioStreamStatus status, void *userData );
 
   void computeSamples ( float *outputBuffer, unsigned int nBufferFrames );
+
+  float levelDetect ( float *buffer, unsigned int nFrames );
+
   int simulationStepsPerSample;
   int numMasses;
   float Ktension;
@@ -163,10 +179,18 @@ struct StringModel {
   float vibratorFreq;
   float vibratorAmplitude;
   float vibratorPhase;
-  float t;
+  //  float t;
+
+  float compressionThreshold;
+  float compressionRatio;
 };
 
+
 // pure c++ audio computation
+
+
+
+
 class Parameter {
   Parameter() : targetValue(0.0f),
 		previousValue ( 0.0f )
@@ -189,7 +213,10 @@ class Parameter {
 void
 StringModel::computeSamples ( float *soundout, unsigned int nBufferFrames )
 {
+
+
   int iters = nBufferFrames * simulationStepsPerSample;
+  float *buf = soundout;
 
   for ( int t = 0; t < iters; t++ ) {
 
@@ -203,9 +230,11 @@ StringModel::computeSamples ( float *soundout, unsigned int nBufferFrames )
       vibratorPhase += (1.0 / sampleRate) / simulationStepsPerSample;
       while ( vibratorPhase > 2*M_PI )
 	vibratorPhase -= 2*M_PI;
+    } else {
+      y[0] = 0.0f;
     }
 
-    // XXX not working : #pragma omp parallel for reduction(+:sum) private(accel)
+    // XXX omp not working : #pragma omp parallel for reduction(+:sum) private(accel)
     for ( i = 1; i < n-1; i++ ) {
 	accel = Ktension * (yold[i+1] + yold[i-1] - 2*yold[i]);
 	v[i] += accel;
@@ -219,24 +248,70 @@ StringModel::computeSamples ( float *soundout, unsigned int nBufferFrames )
     yold = tmp;
 
     if ( t % simulationStepsPerSample == 0 ) {
+
       if (fabs(sum) > 1.0) {
-	sum = sum < 0.0 ? -1.0 : 1.0;
+	//	sum = sum < 0.0 ? -1.0 : 1.0;
 	std::cout << "! " << sum;// << std::endl;
       }
+
+
+
+
 #if 1
       // summed output
-      *soundout++ = sum;
-      *soundout++ = sum;
+      *buf++ = sum;
+      *buf++ = sum;
 #else
       // per channel pickup placement
-      *soundout++ = 10.0f * yold[numMasses/13];
-      *soundout++ = 10.0f * yold[numMasses/5];
+      *buf++ = 10.0f * yold[numMasses/13];
+      *buf++ = 10.0f * yold[numMasses/5];
 #endif
     }
 
   }
 
+  // limiting/compression
+  float rmsLevel = levelDetect ( soundout, nBufferFrames );
+  int numFrames = nBufferFrames;
+  float *sample = soundout;
+  float gain;
+
+  std::cout << " rms=" << rmsLevel << std::endl;
+
+  if ( rmsLevel > compressionThreshold ) {
+    gain = 1.0f - decibelsToLinear ( (rmsLevel - compressionThreshold) / compressionRatio );
+  } else {
+    gain = 1.0f;
+  }
+  while (numFrames--) {
+    *sample++ = *sample * gain;
+    *sample++ = *sample * gain;
+  }
 }
+
+inline
+float
+StringModel::levelDetect ( float *buffer, unsigned int nFrames )
+{
+  // compute RMS average over the buffer
+  float sumOfSquares = 0.0f;
+  float val;
+  for (unsigned int i = 0; i < nFrames*2; i++) {
+    val = *buffer++;
+    sumOfSquares += val * val;
+  }
+  return linearToDecibels (sqrt ( sumOfSquares / nFrames*2 ) );
+}
+
+
+
+
+
+
+
+//
+// end pure c++ callback section
+//
 
 // the RtAudio callback
 
