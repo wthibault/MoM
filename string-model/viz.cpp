@@ -48,88 +48,6 @@ RtAudio dac;
 //
 //////
 
-/////////////////////////////////////////////////////////////////////////////////////////
-// limiter code from musicdsp.org by thevinn at yahoo dot com
-
-class EnvelopeFollower
-{
-public:
-    EnvelopeFollower();
-
-    void Setup( double attackMs, double releaseMs, int sampleRate );
-
-    template<class T, int skip>
-    void Process( size_t count, const T *src );
-
-    double envelope;
-
-protected:
-    double a;
-    double r;
-};
-
-//----------
-
-inline EnvelopeFollower::EnvelopeFollower()
-{
-    envelope=0;
-}
-
-inline void EnvelopeFollower::Setup( double attackMs, double releaseMs, int sampleRate )
-{
-    a = pow( 0.01, 1.0 / ( attackMs * sampleRate * 0.001 ) );
-    r = pow( 0.01, 1.0 / ( releaseMs * sampleRate * 0.001 ) );
-}
-
-template<class T, int skip>
-void EnvelopeFollower::Process( size_t count, const T *src )
-{
-    while( count-- )
-    {
-        double v=::fabs( *src );
-        src+=skip;
-        if( v>envelope )
-            envelope = a * ( envelope - v ) + v;
-        else
-            envelope = r * ( envelope - v ) + v;
-    }
-}
-
-//----------
-
-struct Limiter
-{
-    void Setup( double attackMs, double releaseMs, int sampleRate );
-
-    template<class T, int skip>
-    void Process( size_t nSamples, T *dest );
-
-private:
-    EnvelopeFollower e;
-};
-
-//----------
-
-inline void Limiter::Setup( double attackMs, double releaseMs, int sampleRate )
-{
-    e.Setup( attackMs, releaseMs, sampleRate );
-}
-
-template<class T, int skip>
-void Limiter::Process( size_t count, T *dest )
-{
-    while( count-- )
-    {
-        T v=*dest;
-        // don't worry, this should get optimized
-        e.Process<T, skip>( 1, &v );
-        if( e.envelope>1 )
-            *dest=*dest/e.envelope;
-        dest+=skip;
-    }
-}
-/////////////////////////////////////////////////////////////////////////////////////////
-
 
 //
 // physical string model - 
@@ -187,9 +105,6 @@ struct StringModel {
       v[i]  = 0.0f;
       yold[i] = y[i] = 0.0f;
     }
-
-    // init the limiter
-    theLimiter.Setup ( 10.0, 300.0, 44100 );
 
     // init the mutex
     pthread_mutex_init ( &lock, NULL );
@@ -277,7 +192,6 @@ struct StringModel {
   float compressionThreshold;
   float compressionRatio;
 
-  Limiter theLimiter;
 };
 
 
@@ -368,12 +282,7 @@ StringModel::computeSamples ( float *soundout, unsigned int nBufferFrames )
   // Limit/compress
   //
 
-#if 0
-  float before = soundout[0];
-  theLimiter.Process<float,1> ( nBufferFrames * 2, soundout );
-  std::cout << "diff:" << before-soundout[0] <<','<<before<<','<<soundout[0]<< std::endl;
-#else
-  // limiting/compression
+
   // exponential smoothing for envelope follower
   static float rmsLevel = 0.0;
   float rmsLevelMeasurement = levelDetect ( soundout, nBufferFrames );
@@ -387,16 +296,11 @@ StringModel::computeSamples ( float *soundout, unsigned int nBufferFrames )
   float *sample = soundout;
   float gain;
 
-  compressionThreshold = -10;
-  compressionRatio = 1/2.0;
   if ( rmsLevel > compressionThreshold ) {
     gain = decibelsToLinear ( - (rmsLevel - compressionThreshold) * compressionRatio );
   } else {
     gain = 1.0f;
   }
-
-  std::cout << " rms=" << rmsLevel << " "
-	    << " gain=" << gain << std::endl;
 
   while (numFrames--) {
     clip(sample);
@@ -404,7 +308,6 @@ StringModel::computeSamples ( float *soundout, unsigned int nBufferFrames )
     clip(sample);
     *sample++ = *sample * gain;
   }
-#endif
 }
 
 
@@ -745,17 +648,19 @@ void keyboard (unsigned char key, int x, int y)
     autorotate = ! autorotate;
     break;
 
-  case 't' : theString->Ktension *= 1.05946; break;
+  case 't' : theString->Ktension *= 1.05946; 
+    theString->Ktension = fmin ( 1.0, theString->Ktension );
+    break;
   case 'l' : theString->Ktension *= 0.943876; break;
   case 'P' : theString->pluck(); break;
   case 'p' : theString->pluckvel(); break;
   case 'r' : theString->reset(); break;
   case 'd' : theString->print(); break;
   case 'v' : theString->toggleVibrator(); break;
-  case 'f' : theString->vibratorFreq *= 0.99; 
+  case 'f' : theString->vibratorFreq *= 0.943875; 
     std::cout << "vib freq = " << theString->vibratorFreq << std::endl;
     break;
-  case 'F' : theString->vibratorFreq /= 0.99; 
+  case 'F' : theString->vibratorFreq /= 0.943875; 
     std::cout << "vib freq = " << theString->vibratorFreq << std::endl;
     break;
   case 27: /* ESC */
