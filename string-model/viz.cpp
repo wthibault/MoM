@@ -1,12 +1,7 @@
 //
 // viz.cpp - realtime vibrating string experimental apparatus
 // 
-/*
- * trackball.cpp
- * Dave Rogers, modified from
- * Tebo: trackball.py
- * 14-Dec-2010 - modified by Bill Thibault to draw a FDP'd graph
- */
+
 
 
 #include <iostream>
@@ -152,6 +147,13 @@ decibelsToLinear ( float db ) {
   return pow ( 10.0, (0.05 * db) );
 }
 
+inline
+void
+clip ( float *s ) {
+  if (fabs(*s) > 1.0) {
+	*s = *s < 0.0 ? -1.0 : 1.0;
+  }
+}
 
 struct StringModel {
   StringModel ( int n, float _Ktension, float _Kdamping, int _stepspersample )
@@ -163,8 +165,8 @@ struct StringModel {
       vibratorFreq ( 100.0f ),
       vibratorAmplitude ( 0.001f ),
       vibratorPhase ( 0.0 ),
-      compressionThreshold ( -20.0 ),
-      compressionRatio ( 10.0f )
+      compressionThreshold ( -10.0 ),
+      compressionRatio ( 0.5 )
   {
     std::cout << "StringModel N,K_t,K_d,ss: " 
 	      << numMasses << ',' 
@@ -279,8 +281,8 @@ struct StringModel {
 };
 
 
-// pure c++ audio computation
-
+// BEGIN pure c++ audio computation
+// --no calls to the outside world allowed
 
 
 
@@ -303,6 +305,11 @@ class Parameter {
   float previousValue;
   float lastValue;
 };
+
+
+///
+/// computeSamples creates a buffer's worth of output samples
+///
 
 void
 StringModel::computeSamples ( float *soundout, unsigned int nBufferFrames )
@@ -343,10 +350,6 @@ StringModel::computeSamples ( float *soundout, unsigned int nBufferFrames )
 
     if ( t % simulationStepsPerSample == 0 ) {
 
-      if (fabs(sum) > 1.0) {
-	//	sum = sum < 0.0 ? -1.0 : 1.0;
-	std::cout << "! " << sum;// << std::endl;
-      }
 
 #if 1
       // summed output
@@ -361,28 +364,49 @@ StringModel::computeSamples ( float *soundout, unsigned int nBufferFrames )
 
   }
 
-#if 1
+  //
+  // Limit/compress
+  //
+
+#if 0
+  float before = soundout[0];
   theLimiter.Process<float,1> ( nBufferFrames * 2, soundout );
+  std::cout << "diff:" << before-soundout[0] <<','<<before<<','<<soundout[0]<< std::endl;
 #else
   // limiting/compression
-  float rmsLevel = levelDetect ( soundout, nBufferFrames );
+  // exponential smoothing for envelope follower
+  static float rmsLevel = 0.0;
+  float rmsLevelMeasurement = levelDetect ( soundout, nBufferFrames );
+  float alpha = 0.1;// XXX
+  float beta = 0.1;// XXX
+  if ( rmsLevelMeasurement < rmsLevel )
+    rmsLevel = beta * rmsLevelMeasurement + (1-beta) * rmsLevel;
+  else
+    rmsLevel = alpha * rmsLevelMeasurement + (1-alpha) * rmsLevel;
   int numFrames = nBufferFrames;
   float *sample = soundout;
   float gain;
 
-  std::cout << " rms=" << rmsLevel << std::endl;
-
+  compressionThreshold = -10;
+  compressionRatio = 1/2.0;
   if ( rmsLevel > compressionThreshold ) {
-    gain = 1.0f - decibelsToLinear ( (rmsLevel - compressionThreshold) / compressionRatio );
+    gain = decibelsToLinear ( - (rmsLevel - compressionThreshold) * compressionRatio );
   } else {
     gain = 1.0f;
   }
+
+  std::cout << " rms=" << rmsLevel << " "
+	    << " gain=" << gain << std::endl;
+
   while (numFrames--) {
+    clip(sample);
     *sample++ = *sample * gain;
+    clip(sample);
     *sample++ = *sample * gain;
   }
 #endif
 }
+
 
 inline
 float
@@ -405,7 +429,7 @@ StringModel::levelDetect ( float *buffer, unsigned int nFrames )
 
 
 //
-// end pure c++ callback section
+// END pure c++ callback section
 //
 
 // the RtAudio callback
