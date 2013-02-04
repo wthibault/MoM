@@ -50,8 +50,10 @@ StringModel::computeSamples ( float *soundout, unsigned int nBufferFrames )
     float accel;
     if ( vibratorOn ) {
       // XXX interpolate params
-      y[0] = vibratorAmplitude * sin ( vibratorFreq * vibratorPhase );
-      vibratorPhase += (1.0 / sampleRate) / simulationStepsPerSample;
+      //      y[0] = vibratorAmplitude * sin ( vibratorFreq * vibratorPhase );
+      //      vibratorPhase += (1.0 / sampleRate) / simulationStepsPerSample;
+      y[0] = vibratorAmplitude * sin ( vibratorPhase );
+      vibratorPhase += (vibratorFreq / sampleRate) / simulationStepsPerSample;
       while ( vibratorPhase > 2*M_PI )
 	vibratorPhase -= 2*M_PI;
     } else {

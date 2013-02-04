@@ -53,26 +53,6 @@ RtAudio dac;
 // physical string model - 
 //
 
-inline
-float
-linearToDecibels ( float amp ) {
-  return 20.0f * log10 ( amp );
-}
-
-inline
-float
-decibelsToLinear ( float db ) {
-  return pow ( 10.0, (0.05 * db) );
-}
-
-inline
-void
-clip ( float *s ) {
-  if (fabs(*s) > 1.0) {
-	*s = *s < 0.0 ? -1.0 : 1.0;
-  }
-}
-
 struct StringModel {
   StringModel ( int n, float _Ktension, float _Kdamping, int _stepspersample )
     : numMasses(n), 
@@ -169,12 +149,27 @@ struct StringModel {
     vibratorOn = !vibratorOn;
   }
 
+  inline float linearToDecibels ( float amp ) {
+    return 20.0f * log10 ( amp );
+  }
+
+  inline float decibelsToLinear ( float db ) {
+    return pow ( 10.0, (0.05 * db) );
+  }
+
+  inline void clip ( float *s ) {
+    if (fabs(*s) > 1.0) {
+      *s = *s < 0.0 ? -1.0 : 1.0;
+    }
+  }
+
   static int audioCallback ( void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
 			   double streamTime, RtAudioStreamStatus status, void *userData );
 
   void computeSamples ( float *outputBuffer, unsigned int nBufferFrames );
 
   float levelDetect ( float *buffer, unsigned int nFrames );
+  void compress ( float *soundout, unsigned int nBufferFrames );
 
   int simulationStepsPerSample;
   int numMasses;
@@ -279,10 +274,16 @@ StringModel::computeSamples ( float *soundout, unsigned int nBufferFrames )
   }
 
   //
-  // Limit/compress
+  // Limit/compress (dynamic volume adjustment)
   //
 
+  compress ( soundout, nBufferFrames );
 
+}
+
+void
+StringModel::compress ( float *soundout, unsigned int nBufferFrames )
+{
   // exponential smoothing for envelope follower
   static float rmsLevel = 0.0;
   float rmsLevelMeasurement = levelDetect ( soundout, nBufferFrames );
@@ -357,39 +358,6 @@ StringModel::audioCallback ( void *outputBuffer, void *inputBuffer, unsigned int
 }
 
 //////////////////////////////
-// 
-
-
-// /////////////////////////////
-// // each worker thread gets a portion of the string
-// pthread_cond_t  workReady = PTHREAD_COND_INITIALIZER;
-// pthread_cond_t  workDone = PTHREAD_COND_INITIALIZER;
-// float *audioBuffer;
-// int nBufferFrames;
-// int numThreads;
-// void *threadFunc ( void * arg )
-// {
-//   long int id = (long int)(arg);
-//   int chunkSize = theString->numMasses / numThreads;
-//   int myStart = id * chunkSize;
-
-//   if (myStart + chunkSize > theString->numMasses )
-//     chunkSize = theString->numMasses - myStart;
-
-//   // wait for data ready
-
-//   /* for each buffer frame:
-//        render my section into y
-//        compute my sum  ( master does the global sum )
-       
-//   */
-// }
-
-
-
-
-//////
-
 
 void init(int,char**);
 void map_to_sphere(GLfloat out[3], int x, int y);

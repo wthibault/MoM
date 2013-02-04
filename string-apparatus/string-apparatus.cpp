@@ -4,6 +4,7 @@
 //
 
 #include "ssg.h"
+#include <iomanip>
 #include "ParticleSystem.h"
 #include "Trackball.h"
 #include "StringModel.h"
@@ -24,6 +25,125 @@ const char *shader = "ConstantShading";
 
 StringModel *theString;
 RtAudio dac;
+
+//////
+/////////////////////////////////////////////////////////////////////////
+// StringModelPrimitive - an SSG rendering Primitive subclassed from ParticleSystem
+//
+
+class StringModelPrimitive : public ParticleSystem
+{
+public:
+  StringModelPrimitive( StringModel *stringModel ) 
+    : theString_ ( stringModel ), renderScale_ ( 10.0 )
+  {
+    StringModelPrimitive::init();
+  }
+  ~StringModelPrimitive () {}
+
+  void init() 
+  {
+    points_.clear();
+    normals_.clear();
+    indices_.clear();
+    texCoords_.clear();
+    for ( int i = 0; i < theString_->numMasses; i++ ) {
+      points_.push_back ( glm::vec3(0,0,0) );
+      normals_.push_back ( glm::vec3(0,0,1) );
+      indices_.push_back ( i );
+      texCoords_.push_back ( glm::vec2(i/theString_->numMasses, 0) );
+    }
+    drawingPrimitive_ = GL_POINTS;
+    Primitive::init();
+  }
+
+  void update(float dt) 
+  {
+  }
+
+  void draw ( glm::mat4 mv, glm::mat4 proj, Material *mat ) 
+  {
+    // copy the positions of masses to the vertex array
+    glBindVertexArray ( vao_ );
+
+    points_.clear();
+    indices_.clear();
+    normals_.clear();
+    texCoords_.clear();
+
+    float deltaX = 1.0 / theString_->numMasses;
+    for ( int i = 0; i < theString_->numMasses; i++ ) {
+      float x,y,z;
+      x = 2*(i * deltaX)-1;
+      y = renderScale_ * theString_->yold[i];
+      z = 0;
+      points_.push_back( glm::vec3 ( x,y,z ) );
+      normals_.push_back ( glm::vec3(0,0,1) );
+      texCoords_.push_back ( glm::vec2(i * deltaX, 0) );
+      indices_.push_back ( i );
+    }
+    
+    long int sizeofPoints = sizeof(glm::vec3)*points_.size();
+    int sizeofNormals = sizeof(glm::vec3)*normals_.size();
+    int sizeofTexCoords = sizeof(glm::vec2)*texCoords_.size();
+    drawingPrimitive_ = GL_POINTS;
+
+    glBindBuffer ( GL_ARRAY_BUFFER, arrayBuffer_ );
+    glBufferSubData( GL_ARRAY_BUFFER, 0, sizeofPoints, &points_[0] );
+    glBufferSubData( GL_ARRAY_BUFFER, sizeofPoints, sizeofNormals, &normals_[0] );
+    glBufferSubData( GL_ARRAY_BUFFER, sizeofPoints + sizeofNormals, sizeofTexCoords, &texCoords_[0] );
+    glBindBuffer ( GL_ARRAY_BUFFER, 0 );
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer_);
+    int sizeofIndices = indices_.size()*sizeof(unsigned int);
+    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeofIndices, &indices_[0]);
+    glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, 0);
+    
+    glBindVertexArray(0);
+    
+    Primitive::draw ( mv, proj, mat );
+
+    printParams();
+  }
+
+  void printParam ( const std::string name, float value ) {
+    std::cout << name << std::setw( 6 ) << value << std::endl;
+  }
+
+  void printParams() {
+    // temp until HUD
+    std::cout << std::endl << std::endl << std::endl;
+    printParam ("Ktension    ", theString_->Ktension );
+    printParam ("Kdamping    ", theString_->Kdamping );
+    printParam ("vib freq.   ", theString_->vibratorFreq );
+    printParam ("vib amp.    ", theString_->vibratorAmplitude );
+    
+    std::cout << std::endl;
+    std::cout << "t/g tension (coarse) " << std::endl;
+    std::cout << "T/G tension (fine) " << std::endl;
+    std::cout << "e/d damping (coarse) " << std::endl;
+    std::cout << "E/D damping (fine) " << std::endl;
+    std::cout << "u/j vib freq (coarse) " << std::endl;
+    std::cout << "U/J vib freq (fine) " << std::endl;
+    std::cout << "i/k vib amp (coarse) " << std::endl;
+    std::cout << "I/K vib amp (fine) " << std::endl;
+    std::cout << "p/P pluck" << std::endl;
+    std::cout << "v toggle vibrator " << std::endl;
+    std::cout << "r reset" << std::endl;
+    std::cout << "ESC exit" << std::endl;
+  }
+
+  StringModel *theString_;
+  float        renderScale_;
+};
+
+
+
+
+
+/////////////////////////////////////////////////////////////////////////
+
+
 
 void 
 display ()
@@ -92,26 +212,108 @@ createRandomInstanceNewSystem ()
 void 
 keyboard (unsigned char key, int x, int y)
 {
+  float upCoarse = 1.06;
+  float upFine = 1.006;
+  float downCoarse = 1 / upCoarse;
+  float downFine = 1 / upFine;
+  float dampAdjustment = 1e-5;
+
   switch (key) {
   case 'a':
     dynamic_cast<Instance*>(root)->addChild ( createRandomInstanceNewSystem() );
     break;
 
-  case 't' : theString->Ktension *= 1.05946; 
+  case 't' : 
+    // coarse tension control - up
+    theString->Ktension *= upCoarse;
     theString->Ktension = fmin ( 1.0, theString->Ktension );
     break;
-  case 'l' : theString->Ktension *= 0.943876; break;
+  case 'T' : 
+    // fine tension control - up
+    theString->Ktension *= upFine;
+    theString->Ktension = fmin ( 1.0, theString->Ktension );
+    break;
+  case 'g' : 
+    // coarse tension control - down
+    theString->Ktension *= downCoarse;
+    break;
+  case 'G' : 
+    // fine tension control - down
+    theString->Ktension *= downFine;
+    break;
+
+
+  case 'e' : 
+    // coarse damping control - up
+    //    theString->Kdamping *= upCoarse * dampAdjustment;
+    theString->Kdamping += dampAdjustment;
+    theString->Kdamping = fmin ( 1.0, theString->Kdamping );
+    break;
+  case 'E' : 
+    // fine damping control - up
+    //    theString->Kdamping *= upFine / dampAdjustment;
+    theString->Kdamping += dampAdjustment/10;
+    theString->Kdamping = fmin ( 1.0, theString->Kdamping );
+    break;
+  case 'd' : 
+    // coarse damping control - down
+    //    theString->Kdamping *= downCoarse / dampAdjustment;
+    theString->Kdamping -= dampAdjustment;
+    break;
+  case 'D' : 
+    // fine damping control - down
+    //    theString->Kdamping *= downFine / dampAdjustment;
+    theString->Kdamping -= dampAdjustment/10;
+    break;
+
+
+
+  case 'u' : 
+    // coarse vibrator freq - up
+    theString->vibratorFreq *= upCoarse;
+    std::cout << "vib freq = " << theString->vibratorFreq << std::endl;
+    break;
+  case 'U' : 
+    // fine vibrator freq control - up
+    theString->vibratorFreq *= upFine;
+    std::cout << "vib freq = " << theString->vibratorFreq << std::endl;
+    break;
+  case 'j' : 
+    // coarse vibrator freq - down
+    theString->vibratorFreq *= downCoarse;
+    std::cout << "vib freq = " << theString->vibratorFreq << std::endl;
+    break;
+  case 'J' : 
+    // fine vibrator freq control - down
+    theString->vibratorFreq *= downFine;
+    std::cout << "vib freq = " << theString->vibratorFreq << std::endl;
+    break;
+
+
+  case 'i' : 
+    // coarse vibrator amp - up
+    theString->vibratorAmplitude *= upCoarse;
+    break;
+  case 'I' : 
+    // fine vibrator freq control - up
+    theString->vibratorAmplitude *= upFine;
+    break;
+  case 'k' : 
+    // coarse vibrator freq - down
+    theString->vibratorAmplitude *= downCoarse;
+    break;
+  case 'K' : 
+    // fine vibrator freq control - down
+    theString->vibratorAmplitude *= downFine;
+    break;
+
+
+
+  case 'v' : theString->toggleVibrator(); break;
   case 'P' : theString->pluck(); break;
   case 'p' : theString->pluckvel(); break;
   case 'r' : theString->reset(); break;
-  case 'd' : theString->print(); break;
-  case 'v' : theString->toggleVibrator(); break;
-  case 'f' : theString->vibratorFreq *= 0.943875; 
-    std::cout << "vib freq = " << theString->vibratorFreq << std::endl;
-    break;
-  case 'F' : theString->vibratorFreq /= 0.943875; 
-    std::cout << "vib freq = " << theString->vibratorFreq << std::endl;
-    break;
+    //  case 'd' : theString->print(); break;
 
   case 27: /* ESC */
     try {
@@ -184,7 +386,7 @@ init (int argc, char **argv)
   glLineWidth(1.0);
 
   // the simulation 
-  theString = new StringModel ( 1000, 0.5, 0.99999, 8 );
+  theString = new StringModel ( 1000, 0.01, 0.99999, 8 );
 
   // the audio
   if ( dac.getDeviceCount() < 1 ) {
@@ -214,6 +416,11 @@ init (int argc, char **argv)
     e.printMessage();
     exit(0);
   }
+
+  // the rendering
+  StringModelPrimitive *smp = new StringModelPrimitive ( theString );
+  instance->addChild ( smp );
+
 }
 
 void 
