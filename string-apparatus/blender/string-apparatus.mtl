@@ -17,6 +17,7 @@ Ks 0.500000 0.500000 0.500000
 Ni 1.000000
 d 1.000000
 illum 2
+map_Kd /home/tebo/Software/sandbox/MoM/4848/ssg/textures/zebra.bmp
 
 
 newmtl stand
@@ -27,6 +28,8 @@ Ks 0.500000 0.500000 0.500000
 Ni 1.000000
 d 1.000000
 illum 2
+map_Kd /home/tebo/Software/sandbox/MoM/4848/SSG/data/textures/lichen.bmp
+map_Bump /home/tebo/Software/sandbox/MoM/4848/SSG/data/textures/lichen.bmp
 
 
 newmtl vibrator

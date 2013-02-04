@@ -76,14 +76,14 @@ StringModel::computeSamples ( float *soundout, unsigned int nBufferFrames )
     if ( t % simulationStepsPerSample == 0 ) {
 
 
-#if 1
+#if 0
       // summed output
       *buf++ = sum;
       *buf++ = sum;
 #else
       // per channel pickup placement
-      *buf++ = 10.0f * yold[numMasses/13];
-      *buf++ = 10.0f * yold[numMasses/5];
+      *buf++ = decibelsToLinear(30.0) * yold[numMasses/13];
+      *buf++ = decibelsToLinear(30.0) * yold[numMasses/5];
 #endif
     }
 

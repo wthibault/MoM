@@ -21,7 +21,8 @@ Trackball trackball(320,240,240);
 
 
 //const char *shader = "DepthMap";
-const char *shader = "ConstantShading";
+//const char *shader = "ConstantShading";
+const char *shader = "BumpMappedTexturedPhongShading";
 
 StringModel *theString;
 RtAudio dac;
@@ -213,7 +214,7 @@ void
 keyboard (unsigned char key, int x, int y)
 {
   float upCoarse = 1.06;
-  float upFine = 1.006;
+  float upFine = 1.001;
   float downCoarse = 1 / upCoarse;
   float downFine = 1 / upFine;
   float dampAdjustment = 1e-5;
@@ -271,22 +272,22 @@ keyboard (unsigned char key, int x, int y)
   case 'u' : 
     // coarse vibrator freq - up
     theString->vibratorFreq *= upCoarse;
-    std::cout << "vib freq = " << theString->vibratorFreq << std::endl;
+    //    std::cout << "vib freq = " << theString->vibratorFreq << std::endl;
     break;
   case 'U' : 
     // fine vibrator freq control - up
     theString->vibratorFreq *= upFine;
-    std::cout << "vib freq = " << theString->vibratorFreq << std::endl;
+    //    std::cout << "vib freq = " << theString->vibratorFreq << std::endl;
     break;
   case 'j' : 
     // coarse vibrator freq - down
     theString->vibratorFreq *= downCoarse;
-    std::cout << "vib freq = " << theString->vibratorFreq << std::endl;
+    //    std::cout << "vib freq = " << theString->vibratorFreq << std::endl;
     break;
   case 'J' : 
     // fine vibrator freq control - down
     theString->vibratorFreq *= downFine;
-    std::cout << "vib freq = " << theString->vibratorFreq << std::endl;
+    //    std::cout << "vib freq = " << theString->vibratorFreq << std::endl;
     break;
 
 
