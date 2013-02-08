@@ -50,8 +50,6 @@ StringModel::computeSamples ( float *soundout, unsigned int nBufferFrames )
     float accel;
     if ( vibratorOn ) {
       // XXX interpolate params
-      //      y[0] = vibratorAmplitude * sin ( vibratorFreq * vibratorPhase );
-      //      vibratorPhase += (1.0 / sampleRate) / simulationStepsPerSample;
       y[0] = vibratorAmplitude * sin ( vibratorPhase );
       vibratorPhase += (vibratorFreq / sampleRate) / simulationStepsPerSample;
       while ( vibratorPhase > 2*M_PI )
@@ -152,7 +150,11 @@ StringModel::levelDetect ( float *buffer, unsigned int nFrames )
 // END pure c++ callback section
 //
 
+//////////////////////////////////////////////////////////////////////////////////////////
+
+//
 // the RtAudio callback
+//
 
 int
 StringModel::audioCallback ( void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
@@ -172,4 +174,130 @@ StringModel::audioCallback ( void *outputBuffer, void *inputBuffer, unsigned int
   pthread_mutex_unlock ( &(s->lock) );
   return 0;
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+StringModel::StringModel ( int n, float _Ktension, float _Kdamping, int _stepspersample )
+    : numMasses(n), 
+      Ktension(_Ktension),
+      Kdamping(_Kdamping),
+      sampleRate ( 44100 ),
+      simulationStepsPerSample(_stepspersample),
+      vibratorOn ( false ),
+      vibratorFreq ( 100.0f ),
+      vibratorAmplitude ( 0.001f ),
+      vibratorPhase ( 0.0 ),
+      compressionThreshold ( -10.0 ),
+      compressionRatio ( 0.5 )
+{
+  std::cout << "StringModel N,K_t,K_d,ss: " 
+	    << numMasses << ',' 
+	    << Ktension  << ',' 
+	    << Kdamping  << ',' 
+	    << simulationStepsPerSample
+	    << std::endl;
+
+  // allocate displacement and velocity arrays
+  y = new float[numMasses];
+  yold = new float[numMasses];
+  v = new float[numMasses];
+  // initialize displacements and velocities
+  for (int i = 0; i < numMasses; i++ ) {
+    v[i]  = 0.0f;
+    yold[i] = y[i] = 0.0f;
+  }
+  // init the mutex
+  pthread_mutex_init ( &lock, NULL );
+  // init the RNG
+  seed = (unsigned int) time(NULL);
+  // pluck it
+  pluck();
+}
+
+StringModel::~StringModel() 
+{ 
+  delete y; 
+  delete yold; 
+  delete v; 
+}
+
+void 
+StringModel::print() 
+{
+  pthread_mutex_lock ( &lock );
+  std::cout << "N,K_t,K_d,ss: " 
+	    << numMasses << Ktension << Kdamping << simulationStepsPerSample
+	    << std::endl;
+  for (int i = 0; i < numMasses; i++) {
+    std::cout << v[i] << " ";
+  }
+  std::cout << std::endl;
+  pthread_mutex_unlock ( &lock );
+}
+
+
+void 
+StringModel::reset() 
+{
+  pthread_mutex_lock ( &lock );
+  for (int i = 0 ; i < numMasses; i++ ) {
+    v[i] = y[i] = yold[i] = 0.0;
+  }
+  pthread_mutex_unlock ( &lock );
+}
+
+
+void 
+StringModel::pluck() 
+{
+  int pluckAt = float(rand_r(&seed) / float(RAND_MAX)) * (numMasses-2) + 1;
+  //    std::cout << pluckAt << std::endl;
+  pthread_mutex_lock( &lock );
+  float maxDisp = 0.001;
+  float upSlope = maxDisp / pluckAt;
+  float downSlope = maxDisp / (numMasses-pluckAt);
+  for (int i = 1; i< numMasses-2;i++ ) {
+    if (i <= pluckAt )
+      yold[i] = i*upSlope;
+    else
+      yold[i] = maxDisp - (i-pluckAt)*downSlope; 
+  }
+  pthread_mutex_unlock ( &lock );
+}
+
+void 
+StringModel::pluckvel() 
+{
+  int pluckAt = float(rand_r(&seed) / float(RAND_MAX)) * (numMasses-2) + 1;
+  //    std::cout << pluckAt << std::endl;
+  pthread_mutex_lock( &lock );
+  v[pluckAt] = 3e-4 * Ktension;
+  pthread_mutex_unlock ( &lock );
+}
+
+void 
+StringModel::toggleVibrator() {
+  vibratorOn = !vibratorOn;
+}
+
+inline float 
+StringModel::linearToDecibels ( float amp ) 
+{
+  return 20.0f * log10 ( amp );
+}
+
+inline float 
+StringModel::decibelsToLinear ( float db ) 
+{
+  return pow ( 10.0, (0.05 * db) );
+}
+
+inline void 
+StringModel::clip ( float *s ) 
+{
+  if (fabs(*s) > 1.0) {
+    *s = *s < 0.0 ? -1.0 : 1.0;
+  }
+}
+
 

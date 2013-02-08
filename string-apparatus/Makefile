@@ -25,8 +25,10 @@ endif
 # for macosx
 # NOTE for mac you have to use the GLSL 1.2 shaders....
 ifeq   "$(HOST_PLATFORM)" "i686-apple-darwin11"
-INCLUDES = -I$(INC_DIR) -framework OpenGL -framework GLUT -DUSE_APPLE_VERTEXARRAYS
-LIBS =
+RTAUDIO_DIR = /Users/tebo/Software/rtaudio-4.0.10
+INCLUDES = -I$(INC_DIR) -framework OpenGL -framework GLUT -DUSE_APPLE_VERTEXARRAYS \
+	-I$(RTAUDIO_DIR)
+LIBS = -L$(RTAUDIO_DIR)
 endif
 
 SSG_INCS = $(INC_DIR)/ssg.h \
@@ -53,7 +55,7 @@ string-apparatus : string-apparatus.cpp \
 
 
 StringModel.o : StringModel.h StringModel.cpp
-	g++ $(OPTS) -c StringModel.cpp
+	g++ $(OPTS) -c StringModel.cpp $(INCLUDES)
 
 $(SSG_DATA)/objfiles/string-apparatus.obj : blender/string-apparatus.obj
 	cp blender/string-apparatus.obj $(SSG_DATA)/objfiles
