@@ -399,17 +399,22 @@ init (int argc, char **argv)
   parameters.deviceId = dac.getDefaultOutputDevice();
   parameters.nChannels = 2;
   parameters.firstChannel = 0;
+  RtAudio::StreamOptions options;
+  options.flags |= RTAUDIO_SCHEDULE_REALTIME;
+  options.flags |= RTAUDIO_HOG_DEVICE;
   int sampleRate = 44100;
   unsigned int bufferFrames = 256; // 256 sample frames ~ 5ms 
 
+  dac.showWarnings ( true );
   try { 
     dac.openStream ( &parameters, 
 		     NULL, 
-		     RTAUDIO_FLOAT32,
+		     RTAUDIO_FLOAT64,
 		     sampleRate, 
 		     &bufferFrames, 
 		     StringModel::audioCallback,
-		     (void *)theString );
+		     (void *)theString,
+		     &options );
     dac.startStream();
   }
   catch ( RtError& e ) {
@@ -458,7 +463,7 @@ main(int argc, char** argv)
   glutDisplayFunc(display);
   glutReshapeFunc(reshape);
   glutKeyboardFunc(keyboard);
-  glutTimerFunc(30,timer,30); 
+  glutTimerFunc(16,timer,16); 
   glutMainLoop();
   return 0;
 }

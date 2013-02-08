@@ -14,40 +14,39 @@ class Parameter {
   Parameter() : targetValue(0.0f),
 		previousValue ( 0.0f )
   {}
-  inline float getValueAt(float u) {
+  inline double getValueAt(double u) {
     return lastValue = u * targetValue + (1.0f-u) * previousValue;
   }
-  inline void setTargetValue( float target ) {
+  inline void setTargetValue( double target ) {
     targetValue = target;
     previousValue = lastValue;
   }
-  inline void setCurrentValue ( float v ) {
+  inline void setCurrentValue ( double v ) {
     previousValue = lastValue = v;
   }
-  float targetValue;
-  float previousValue;
-  float lastValue;
+  double targetValue;
+  double previousValue;
+  double lastValue;
 };
 
 
 ///
 /// computeSamples creates a buffer's worth of output samples
 ///
-
 void
-StringModel::computeSamples ( float *soundout, unsigned int nBufferFrames )
+StringModel::computeSamples ( double *soundout, unsigned int nBufferFrames )
 {
 
 
   int iters = nBufferFrames * simulationStepsPerSample;
-  float *buf = soundout;
+  double *buf = soundout;
 
   for ( int t = 0; t < iters; t++ ) {
 
-    float sum = 0;
+    double sum = 0;
     int n = numMasses;
     int i;
-    float accel;
+    double accel;
     if ( vibratorOn ) {
       // XXX interpolate params
       y[0] = vibratorAmplitude * sin ( vibratorPhase );
@@ -67,7 +66,7 @@ StringModel::computeSamples ( float *soundout, unsigned int nBufferFrames )
 	sum = sum + y[i];
     }
 
-    float *tmp = y;
+    double *tmp = y;
     y = yold;
     yold = tmp;
 
@@ -96,20 +95,20 @@ StringModel::computeSamples ( float *soundout, unsigned int nBufferFrames )
 }
 
 void
-StringModel::compress ( float *soundout, unsigned int nBufferFrames )
+StringModel::compress ( double *soundout, unsigned int nBufferFrames )
 {
   // exponential smoothing for envelope follower
-  static float rmsLevel = 0.0;
-  float rmsLevelMeasurement = levelDetect ( soundout, nBufferFrames );
-  float alpha = 0.1;// XXX
-  float beta = 0.1;// XXX
+  static double rmsLevel = 0.0;
+  double rmsLevelMeasurement = levelDetect ( soundout, nBufferFrames );
+  double alpha = 0.1;// XXX
+  double beta = 0.1;// XXX
   if ( rmsLevelMeasurement < rmsLevel )
     rmsLevel = beta * rmsLevelMeasurement + (1-beta) * rmsLevel;
   else
     rmsLevel = alpha * rmsLevelMeasurement + (1-alpha) * rmsLevel;
   int numFrames = nBufferFrames;
-  float *sample = soundout;
-  float gain;
+  double *sample = soundout;
+  double gain;
 
   if ( rmsLevel > compressionThreshold ) {
     gain = decibelsToLinear ( - (rmsLevel - compressionThreshold) * compressionRatio );
@@ -125,14 +124,13 @@ StringModel::compress ( float *soundout, unsigned int nBufferFrames )
   }
 }
 
-
 inline
-float
-StringModel::levelDetect ( float *buffer, unsigned int nFrames )
+double
+StringModel::levelDetect ( double *buffer, unsigned int nFrames )
 {
   // compute RMS average over the buffer
-  float sumOfSquares = 0.0f;
-  float val;
+  double sumOfSquares = 0.0f;
+  double val;
   for (unsigned int i = 0; i < nFrames*2; i++) {
     val = *buffer++;
     sumOfSquares += val * val;
@@ -164,12 +162,12 @@ StringModel::audioCallback ( void *outputBuffer, void *inputBuffer, unsigned int
   if (status == RTAUDIO_INPUT_OVERFLOW)
     std::cout << "string -- overflow" << std::endl;
 
-  float *soundout = (float *)outputBuffer;
+  double *soundout = (double *)outputBuffer;
   StringModel *s = (StringModel *)userData;
 
   pthread_mutex_lock(&(s->lock));
 
-  s->computeSamples ( static_cast<float*>(outputBuffer), nBufferFrames );
+  s->computeSamples ( static_cast<double*>(outputBuffer), nBufferFrames );
   
   pthread_mutex_unlock ( &(s->lock) );
   return 0;
@@ -177,7 +175,7 @@ StringModel::audioCallback ( void *outputBuffer, void *inputBuffer, unsigned int
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-StringModel::StringModel ( int n, float _Ktension, float _Kdamping, int _stepspersample )
+StringModel::StringModel ( int n, double _Ktension, double _Kdamping, int _stepspersample )
     : numMasses(n), 
       Ktension(_Ktension),
       Kdamping(_Kdamping),
@@ -198,9 +196,9 @@ StringModel::StringModel ( int n, float _Ktension, float _Kdamping, int _stepspe
 	    << std::endl;
 
   // allocate displacement and velocity arrays
-  y = new float[numMasses];
-  yold = new float[numMasses];
-  v = new float[numMasses];
+  y = new double[numMasses];
+  yold = new double[numMasses];
+  v = new double[numMasses];
   // initialize displacements and velocities
   for (int i = 0; i < numMasses; i++ ) {
     v[i]  = 0.0f;
@@ -250,12 +248,12 @@ StringModel::reset()
 void 
 StringModel::pluck() 
 {
-  int pluckAt = float(rand_r(&seed) / float(RAND_MAX)) * (numMasses-2) + 1;
+  int pluckAt = double(rand_r(&seed) / double(RAND_MAX)) * (numMasses-2) + 1;
   //    std::cout << pluckAt << std::endl;
   pthread_mutex_lock( &lock );
-  float maxDisp = 0.001;
-  float upSlope = maxDisp / pluckAt;
-  float downSlope = maxDisp / (numMasses-pluckAt);
+  double maxDisp = 0.001;
+  double upSlope = maxDisp / pluckAt;
+  double downSlope = maxDisp / (numMasses-pluckAt);
   for (int i = 1; i< numMasses-2;i++ ) {
     if (i <= pluckAt )
       yold[i] = i*upSlope;
@@ -268,7 +266,7 @@ StringModel::pluck()
 void 
 StringModel::pluckvel() 
 {
-  int pluckAt = float(rand_r(&seed) / float(RAND_MAX)) * (numMasses-2) + 1;
+  int pluckAt = double(rand_r(&seed) / double(RAND_MAX)) * (numMasses-2) + 1;
   //    std::cout << pluckAt << std::endl;
   pthread_mutex_lock( &lock );
   v[pluckAt] = 3e-4 * Ktension;
@@ -280,20 +278,20 @@ StringModel::toggleVibrator() {
   vibratorOn = !vibratorOn;
 }
 
-inline float 
-StringModel::linearToDecibels ( float amp ) 
+inline double 
+StringModel::linearToDecibels ( double amp ) 
 {
   return 20.0f * log10 ( amp );
 }
 
-inline float 
-StringModel::decibelsToLinear ( float db ) 
+inline double 
+StringModel::decibelsToLinear ( double db ) 
 {
   return pow ( 10.0, (0.05 * db) );
 }
 
 inline void 
-StringModel::clip ( float *s ) 
+StringModel::clip ( double *s ) 
 {
   if (fabs(*s) > 1.0) {
     *s = *s < 0.0 ? -1.0 : 1.0;

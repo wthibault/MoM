@@ -10,7 +10,10 @@
 #include <RtAudio.h>
 
 struct StringModel {
-  StringModel ( int n, float _Ktension, float _Kdamping, int _stepspersample );
+  StringModel ( int n, 
+		double _Ktension, 
+		double _Kdamping, 
+		int _stepspersample );
   ~StringModel();
 
   void print();
@@ -18,33 +21,37 @@ struct StringModel {
   void pluck();
   void pluckvel();
   void toggleVibrator();
-  inline float linearToDecibels ( float amp );
-  inline float decibelsToLinear ( float db );
-  inline void clip ( float *s );
+  inline double linearToDecibels ( double amp );
+  inline double decibelsToLinear ( double db );
+  inline void clip ( double *s );
 
-  static int audioCallback ( void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
-			   double streamTime, RtAudioStreamStatus status, void *userData );
+  // for RtAudio
+  static int audioCallback ( void *outputBuffer, 
+			     void *inputBuffer, 
+			     unsigned int nBufferFrames,
+			     double streamTime, 
+			     RtAudioStreamStatus status, 
+			     void *userData );
 
-  void computeSamples ( float *outputBuffer, unsigned int nBufferFrames );
+  void computeSamples ( double *outputBuffer, unsigned int nBufferFrames );
 
-  float levelDetect ( float *buffer, unsigned int nFrames );
-  void compress ( float *soundout, unsigned int nBufferFrames );
+  double levelDetect ( double *buffer, unsigned int nFrames );
+  void compress ( double *soundout, unsigned int nBufferFrames );
 
   int simulationStepsPerSample;
   int numMasses;
-  float Ktension;
-  float Kdamping;
+  double Ktension;
+  double Kdamping;
   int sampleRate;
-  float *y, *yold, *v;
+  double *y, *yold, *v;
   unsigned int seed;
   pthread_mutex_t lock;
   bool   vibratorOn;
-  float vibratorFreq;
-  float vibratorAmplitude;
-  float vibratorPhase;
-  //  float t;
+  double vibratorFreq;
+  double vibratorAmplitude;
+  double vibratorPhase;
 
-  float compressionThreshold;
-  float compressionRatio;
+  double compressionThreshold;
+  double compressionRatio;
 
 };
