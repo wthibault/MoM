@@ -2,9 +2,9 @@
 OPTS = -O3
 
 # change these for your system
-INC_DIR=../../4848/SSG/include
-LIB_DIR=../../4848/SSG/src
-SSG_DATA=../../4848/SSG/data
+INC_DIR=../../4848/ssg/include
+LIB_DIR=../../4848/ssg/src
+SSG_DATA=../../4848/ssg/data
 
 HOST_PLATFORM := $(shell $(CPP) -dumpmachine)
 $(info $(HOST_PLATFORM))
@@ -17,8 +17,8 @@ endif
 
 ifeq   "$(HOST_PLATFORM)" "x86_64-linux-gnu"
 #for sn336,sn148, ubuntu 
-RTAUDIO_DIR = /Users/tebo/Software/rtaudio-4.0.10
-INCLUDES = -I$(INC_DIR)
+RTAUDIO_DIR = ../../../rtaudio-4.0.11
+INCLUDES = -I$(INC_DIR) -I$(RTAUDIO_DIR)
 LIBS = -lGL -lGLU -lglut -lGLEW -lpthread
 endif
 
