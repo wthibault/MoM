@@ -387,7 +387,7 @@ init (int argc, char **argv)
   glLineWidth(1.0);
 
   // the simulation 
-  theString = new StringModel ( 1000, 0.01, 0.99999, 8 );
+  theString = new StringModel ( 1000, 0.01, 0.99999, 2 );
 
   // the audio
   if ( dac.getDeviceCount() < 1 ) {
