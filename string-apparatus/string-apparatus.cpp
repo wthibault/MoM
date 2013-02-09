@@ -108,7 +108,7 @@ public:
     
     Primitive::draw ( mv, proj, mat );
 
-    printParams();
+    //    printParams();
   }
 
   void printParam ( const std::string name, float value ) {
@@ -149,6 +149,94 @@ public:
 /////////////////////////////////////////////////////////////////////////
 
 
+class FFTPrimitive : public ParticleSystem
+{
+public:
+  FFTPrimitive( StringModel *stringModel ) 
+    : theString_ ( stringModel )
+  {
+    FFTPrimitive::init();
+  }
+  ~FFTPrimitive () {}
+
+  void init() 
+  {
+    points_.clear();
+    normals_.clear();
+    indices_.clear();
+    texCoords_.clear();
+    float step = 1.0 / theString_->bufferFrames/2;
+    for ( int i = 0; i < theString_->bufferFrames/2; i++ ) {
+      points_.push_back ( glm::vec3(i*step, 0.0, 0) );
+      points_.push_back ( glm::vec3(i*step, 1.0, 0) );
+      normals_.push_back ( glm::vec3(0,0,1) );
+      normals_.push_back ( glm::vec3(0,0,1) );
+      indices_.push_back ( 2*i );
+      indices_.push_back ( 2*i+1 );
+      texCoords_.push_back ( glm::vec2(i*step, 0) );
+      texCoords_.push_back ( glm::vec2(i*step, 1) );
+    }
+    drawingPrimitive_ = GL_LINES;
+    Primitive::init();
+  }
+
+  void update(float dt) 
+  {
+    points_.clear();
+    indices_.clear();
+    normals_.clear();
+    texCoords_.clear();
+
+    int middle = theString_->bufferFrames/2;
+    float deltaX = 1.0 / theString_->bufferFrames/2;
+    for ( int i = 0; i < theString_->bufferFrames/2; i++ ) {
+      float x,y,z;
+      x = i * deltaX;
+      //      y = 20*log10((theString_->fftwOut[i][0]));
+      y = 20*log10(fabs(theString_->fftwOut[i][0]));
+      z = 0;
+      points_.push_back( glm::vec3 ( x,-100,z ) );
+      points_.push_back( glm::vec3 ( x,y,z ) );
+      normals_.push_back ( glm::vec3(0,0,1) );
+      normals_.push_back ( glm::vec3(0,0,1) );
+      texCoords_.push_back ( glm::vec2(i * deltaX, 0) );
+      texCoords_.push_back ( glm::vec2(i * deltaX, 1) );
+      indices_.push_back ( 2*i );
+      indices_.push_back ( 2*i+1 );
+    }
+  }
+
+  void draw ( glm::mat4 mv, glm::mat4 proj, Material *mat ) 
+  {
+    // copy the positions of masses to the vertex array
+    glBindVertexArray ( vao_ );
+
+    long int sizeofPoints = sizeof(glm::vec3)*points_.size();
+    int sizeofNormals = sizeof(glm::vec3)*normals_.size();
+    int sizeofTexCoords = sizeof(glm::vec2)*texCoords_.size();
+    drawingPrimitive_ = GL_LINES;
+
+    glBindBuffer ( GL_ARRAY_BUFFER, arrayBuffer_ );
+    glBufferSubData( GL_ARRAY_BUFFER, 0, sizeofPoints, &points_[0] );
+    glBufferSubData( GL_ARRAY_BUFFER, sizeofPoints, sizeofNormals, &normals_[0] );
+    glBufferSubData( GL_ARRAY_BUFFER, sizeofPoints + sizeofNormals, sizeofTexCoords, &texCoords_[0] );
+    glBindBuffer ( GL_ARRAY_BUFFER, 0 );
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer_);
+    int sizeofIndices = indices_.size()*sizeof(unsigned int);
+    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeofIndices, &indices_[0]);
+    glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, 0);
+    
+    glBindVertexArray(0);
+    
+    Primitive::draw ( mv, proj, mat );
+
+    //    printParams();
+  }
+
+  StringModel *theString_;
+};
+///////////////////////////////////////////////////////////////////////
 
 void 
 display ()
@@ -344,17 +432,6 @@ void
 init (int argc, char **argv)
 {
   
-  // create a primitive.  if supplied on command line, read a .obj wavefront file
-
-  // if ( argc >= 2 ) {
-  //   prim = new ObjFilePrimitive ( argv[1] );
-  // } else {
-  //   //    prim = new Triangle;
-  //   prim = new ParticleSystem();
-  //   std::cout << "usage: " << argv[0] << " [objfile.obj]\n";
-  // }
-  // std::cout << "Hit 'a' to add a new particle system.\n";
-
   // XXX this should pull it apart so we can move things
   prim = new ObjFilePrimitive ( "objfiles/string-apparatus.obj" );
   // create a root Instance to contain this primitive
@@ -394,7 +471,8 @@ init (int argc, char **argv)
 
   // audio params
   int sampleRate = 44100;
-  unsigned int bufferFrames = 256; // 256 sample frames ~ 5ms 
+  //  unsigned int bufferFrames = 256; // 256 sample frames ~ 5ms 
+  unsigned int bufferFrames = 1024; // 256 sample frames ~ 5ms 
 
   // the simulation 
   theString = new StringModel ( 1000, 0.01, 0.99999, 2, sampleRate, bufferFrames );
@@ -434,6 +512,20 @@ init (int argc, char **argv)
   // the rendering
   StringModelPrimitive *smp = new StringModelPrimitive ( theString );
   instance->addChild ( smp );
+
+  FFTPrimitive *fft = new FFTPrimitive ( theString );
+  Instance *fftTransform = new Instance;
+  fftTransform->addChild ( fft );
+  fftTransform->setMatrix ( glm::scale ( glm::translate ( glm::mat4(), glm::vec3 (-1.5,-1.5,0.5) ),
+					 glm::vec3(8,1/128.0,1) ) );
+  instance->addChild ( fftTransform );
+
+  Material *fftmat = new Material;
+  fftmat->ambient = vec4 ( 0.1, 0.1, 0.2, 1.0 );
+  fftmat->diffuse = vec4 ( 0.3, 0.3, 1.0, 1.0 );
+  fftmat->specular = vec4 ( 1.0, 1.0, 1.0, 1.0 );
+  fftmat->shininess = 133.0;
+  fft->setMaterial(fftmat);
 
 }
 

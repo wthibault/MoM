@@ -9,6 +9,16 @@
 #include "StringModel.h"
 
 
+
+
+
+
+  ////////////////////////////////////////////////////////////////////
+
+
+
+
+
 UI::UI ( const char *path )
   : font ( path )
 {
@@ -48,8 +58,6 @@ UI::draw (int width, int height, StringModel *str)
   sprintf(buf,"v amp    %9.4lf", str->vibratorAmplitude);
   printAt ( 0, 0.6*height, buf );
 
-  // fft output
-  
   
 }
 

@@ -147,7 +147,7 @@ StringModel::analyze (double *buffer, unsigned int nBufferFrames)
 {
   // get the left channel for now
   for (unsigned int i = 0; i < nBufferFrames; i++ ) {
-    fftwIn[i] = buffer[i/2];
+    fftwIn[i] = buffer[2*i];
   }
   fftw_execute ( fftwPlan );
   //  std::cout << "\rdc = " << fftwOut[0][0] << std::endl;
@@ -360,7 +360,7 @@ StringModel::toggleVibrator() {
 inline double 
 StringModel::linearToDecibels ( double amp ) 
 {
-  return 20.0f * log10 ( amp );
+  return 20.0 * log10 ( amp );
 }
 
 inline double 
