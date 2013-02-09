@@ -8,6 +8,9 @@
 #include "ParticleSystem.h"
 #include "Trackball.h"
 #include "StringModel.h"
+#include <fftw3.h>
+#include "ui.h"
+
 using namespace glm;
 
 ModelNode *root;          
@@ -26,6 +29,7 @@ const char *shader = "BumpMappedTexturedPhongShading";
 
 StringModel *theString;
 RtAudio dac;
+UI ui("VeraSe.ttf");
 
 //////
 /////////////////////////////////////////////////////////////////////////
@@ -158,6 +162,8 @@ display ()
   mat4 mv = modelviewMatrix * tball;
 
   root->draw(mv, projectionMatrix );
+
+  ui.draw( width, height, theString );
 
   glutSwapBuffers();
 }
@@ -386,8 +392,12 @@ init (int argc, char **argv)
   glPointSize(1.0);
   glLineWidth(1.0);
 
+  // audio params
+  int sampleRate = 44100;
+  unsigned int bufferFrames = 256; // 256 sample frames ~ 5ms 
+
   // the simulation 
-  theString = new StringModel ( 1000, 0.01, 0.99999, 2 );
+  theString = new StringModel ( 1000, 0.01, 0.99999, 2, sampleRate, bufferFrames );
 
   // the audio
   if ( dac.getDeviceCount() < 1 ) {
@@ -402,8 +412,6 @@ init (int argc, char **argv)
   RtAudio::StreamOptions options;
   options.flags |= RTAUDIO_SCHEDULE_REALTIME;
   options.flags |= RTAUDIO_HOG_DEVICE;
-  int sampleRate = 44100;
-  unsigned int bufferFrames = 256; // 256 sample frames ~ 5ms 
 
   dac.showWarnings ( true );
   try { 

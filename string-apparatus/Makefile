@@ -18,8 +18,9 @@ endif
 ifeq   "$(HOST_PLATFORM)" "x86_64-linux-gnu"
 #for sn336,sn148, ubuntu 
 RTAUDIO_DIR = ../../../rtaudio-4.0.11
-INCLUDES = -I$(INC_DIR) -I$(RTAUDIO_DIR)
-LIBS = -lGL -lGLU -lglut -lGLEW -lpthread
+INCLUDES = -I$(INC_DIR) -I$(RTAUDIO_DIR) $(shell pkg-config ftgl --cflags)
+LIBS = -lGL -lGLU -lglut -lGLEW -lpthread /usr/local/lib/libfftw3.a \
+	$(shell pkg-config ftgl --libs)
 endif
 
 # for macosx
@@ -46,16 +47,24 @@ SSG_INCS = $(INC_DIR)/ssg.h \
 all : 	string-apparatus
 
 string-apparatus : string-apparatus.cpp \
-	$(SSG_INCS) \
-	$(LIB_DIR)/ssg.a \
-	$(SSG_DATA)/objfiles/string-apparatus.obj \
-	StringModel.o
-	g++ $(OPTS) -o string-apparatus $(INCLUDES) string-apparatus.cpp $(LIB_DIR)/ssg.a $(LIBS) StringModel.o \
+		StringModel.o \
+		ui.o \
+		$(SSG_INCS) \
+		$(LIB_DIR)/ssg.a \
+		$(SSG_DATA)/objfiles/string-apparatus.obj 
+	g++ $(OPTS) -o string-apparatus $(INCLUDES) string-apparatus.cpp \
+		StringModel.o \
+		ui.o \
+		$(LIB_DIR)/ssg.a \
 		-I$(RTAUDIO_DIR) -L$(RTAUDIO_DIR) -lrtaudio \
+		$(LIBS)
 
 
 StringModel.o : StringModel.h StringModel.cpp
 	g++ $(OPTS) -c StringModel.cpp $(INCLUDES)
+
+ui.o : ui.h ui.cpp 
+	g++ $(OPTS) -c ui.cpp $(INCLUDES)
 
 $(SSG_DATA)/objfiles/string-apparatus.obj : blender/string-apparatus.obj
 	cp blender/string-apparatus.obj $(SSG_DATA)/objfiles

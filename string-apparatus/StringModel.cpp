@@ -4,30 +4,61 @@
 
 #include "StringModel.h"
 
+
+//////////////////////////////////////////
 // BEGIN pure c++ audio computation
 // --no calls to the outside world allowed
 
+// don't call this unless there are two samples on either side of i!!!!
+inline
+double
+StringModel::curvature2(int i, double *y)
+{
+  return 3.0 * (y[i+1] + y[i-1])
+    - 0.75 * ( y[i+2] + y[i-2] ) 
+    - 2.5 * y[i];
+}
 
+inline
+void
+StringModel::updateElement2 ( int i ) 
+{
+  double accel;
+  accel = Ktension * curvature2 ( i, yold );
+  //  y[i] += 2 * yold[i] - yolder[i] + accel;
+  v[i] += accel;
+  v[i] *= Kdamping;
+  y[i] = yold[i] + v[i];
+  //  sum = sum + y[i]; // don't need this if using pickups
+}
 
-// simple lerper class
-class Parameter {
-  Parameter() : targetValue(0.0f),
-		previousValue ( 0.0f )
-  {}
-  inline double getValueAt(double u) {
-    return lastValue = u * targetValue + (1.0f-u) * previousValue;
-  }
-  inline void setTargetValue( double target ) {
-    targetValue = target;
-    previousValue = lastValue;
-  }
-  inline void setCurrentValue ( double v ) {
-    previousValue = lastValue = v;
-  }
-  double targetValue;
-  double previousValue;
-  double lastValue;
-};
+inline
+void
+StringModel::updateElement1 ( int i ) 
+{
+  double accel;
+  accel = Ktension * (yold[i+1] + yold[i-1] - 2*yold[i]);
+  v[i] += accel;
+  v[i] *= Kdamping;
+  y[i] = yold[i] + v[i];
+  //  sum = sum + y[i]; // don't need this if using pickups
+}
+
+void
+swap3 ( double * &a, double * &b, double * &c )
+{
+  // double *tmp = c;
+  // b = a;
+  // a = tmp;
+  // tmp = c;
+  // c = a;
+  // a = tmp;
+  double *tmp = c;
+  c = b;
+  b = a;
+  a = tmp;
+}
+  
 
 
 ///
@@ -48,7 +79,6 @@ StringModel::computeSamples ( double *soundout, unsigned int nBufferFrames )
     int i;
     double accel;
     if ( vibratorOn ) {
-      // XXX interpolate params
       y[0] = vibratorAmplitude * sin ( vibratorPhase );
       vibratorPhase += (vibratorFreq / sampleRate) / simulationStepsPerSample;
       while ( vibratorPhase > 2*M_PI )
@@ -57,18 +87,30 @@ StringModel::computeSamples ( double *soundout, unsigned int nBufferFrames )
       y[0] = 0.0f;
     }
 
-    // XXX omp not working : #pragma omp parallel for reduction(+:sum) private(accel)
+
+#if 1
+    // use first order curvature est
     for ( i = 1; i < n-1; i++ ) {
-	accel = Ktension * (yold[i+1] + yold[i-1] - 2*yold[i]);
-	v[i] += accel;
-	v[i] *= Kdamping;
-	y[i] = yold[i] + v[i];
-	sum = sum + y[i];
+      updateElement1 ( i );
     }
 
     double *tmp = y;
     y = yold;
     yold = tmp;
+
+#else
+    // use second order curvature est
+    // handle the next-to-last with a diff curvature estimate
+    updateElement1 ( 1 );
+    updateElement1 ( n-1 );
+    for ( i = 2; i < n-2; i++ ) {
+      updateElement2 ( i );
+    }
+
+    swap3 ( y, yold, yolder );
+
+#endif
+
 
     if ( t % simulationStepsPerSample == 0 ) {
 
@@ -86,12 +128,29 @@ StringModel::computeSamples ( double *soundout, unsigned int nBufferFrames )
 
   }
 
+  // 
+  // ship a copy off for FFT analysis
+  //
+
+  analyze ( soundout, nBufferFrames );
+
   //
   // Limit/compress (dynamic volume adjustment)
   //
 
   compress ( soundout, nBufferFrames );
 
+}
+
+void
+StringModel::analyze (double *buffer, unsigned int nBufferFrames)
+{
+  // get the left channel for now
+  for (unsigned int i = 0; i < nBufferFrames; i++ ) {
+    fftwIn[i] = buffer[i/2];
+  }
+  fftw_execute ( fftwPlan );
+  //  std::cout << "\rdc = " << fftwOut[0][0] << std::endl;
 }
 
 void
@@ -175,11 +234,17 @@ StringModel::audioCallback ( void *outputBuffer, void *inputBuffer, unsigned int
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-StringModel::StringModel ( int n, double _Ktension, double _Kdamping, int _stepspersample )
+StringModel::StringModel ( int n, 
+			   double _Ktension, 
+			   double _Kdamping, 
+			   int _stepspersample,
+			   int _sampleRate,
+			   int _bufferFrames )
     : numMasses(n), 
       Ktension(_Ktension),
       Kdamping(_Kdamping),
-      sampleRate ( 44100 ),
+      sampleRate ( _sampleRate ),
+      bufferFrames ( _bufferFrames ),
       simulationStepsPerSample(_stepspersample),
       vibratorOn ( false ),
       vibratorFreq ( 100.0f ),
@@ -198,25 +263,39 @@ StringModel::StringModel ( int n, double _Ktension, double _Kdamping, int _steps
   // allocate displacement and velocity arrays
   y = new double[numMasses];
   yold = new double[numMasses];
+  yolder = new double[numMasses];
   v = new double[numMasses];
+
   // initialize displacements and velocities
   for (int i = 0; i < numMasses; i++ ) {
     v[i]  = 0.0f;
     yold[i] = y[i] = 0.0f;
   }
+
   // init the mutex
   pthread_mutex_init ( &lock, NULL );
+
   // init the RNG
   seed = (unsigned int) time(NULL);
+
   // pluck it
   pluck();
+
+  // set up the fft
+  fftwIn = (double *)        fftw_malloc(sizeof(double)*bufferFrames);
+  fftwOut = (fftw_complex *) fftw_malloc ( sizeof(fftw_complex) * (bufferFrames/2 + 1) );
+  fftwPlan = fftw_plan_dft_r2c_1d ( bufferFrames, fftwIn, fftwOut, FFTW_MEASURE );
 }
 
 StringModel::~StringModel() 
 { 
   delete y; 
   delete yold; 
+  delete yolder; 
   delete v; 
+  fftw_destroy_plan(fftwPlan);
+  fftw_free(fftwIn );
+  fftw_free(fftwOut);
 }
 
 void 
@@ -239,7 +318,7 @@ StringModel::reset()
 {
   pthread_mutex_lock ( &lock );
   for (int i = 0 ; i < numMasses; i++ ) {
-    v[i] = y[i] = yold[i] = 0.0;
+    v[i] = y[i] = yold[i] = yolder[i] = 0.0;
   }
   pthread_mutex_unlock ( &lock );
 }

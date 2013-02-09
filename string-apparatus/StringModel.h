@@ -8,12 +8,15 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <RtAudio.h>
+#include <fftw3.h>
 
 struct StringModel {
   StringModel ( int n, 
 		double _Ktension, 
 		double _Kdamping, 
-		int _stepspersample );
+		int _stepspersample,
+		int _sampleRate,
+		int _bufferFrames );
   ~StringModel();
 
   void print();
@@ -33,7 +36,12 @@ struct StringModel {
 			     RtAudioStreamStatus status, 
 			     void *userData );
 
+  inline double curvature2 ( int i, double *y );
+  inline void updateElement2 ( int i );
+  inline void updateElement1 ( int i );
   void computeSamples ( double *outputBuffer, unsigned int nBufferFrames );
+
+  void analyze(double *buffer, unsigned int nBufferFrames);
 
   double levelDetect ( double *buffer, unsigned int nFrames );
   void compress ( double *soundout, unsigned int nBufferFrames );
@@ -43,7 +51,11 @@ struct StringModel {
   double Ktension;
   double Kdamping;
   int sampleRate;
-  double *y, *yold, *v;
+  int bufferFrames;
+  double *y;
+  double *yold;
+  double *yolder;
+  double *v;
   unsigned int seed;
   pthread_mutex_t lock;
   bool   vibratorOn;
@@ -54,4 +66,7 @@ struct StringModel {
   double compressionThreshold;
   double compressionRatio;
 
+  fftw_plan     fftwPlan;
+  double       *fftwIn;
+  fftw_complex *fftwOut;
 };
