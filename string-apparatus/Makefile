@@ -17,10 +17,11 @@ endif
 
 ifeq   "$(HOST_PLATFORM)" "x86_64-linux-gnu"
 #for sn336,sn148, ubuntu 
-RTAUDIO_DIR = ../../../rtaudio-4.0.11
+RTAUDIO_DIR = ./rtaudio-4.0.10
 INCLUDES = -I$(INC_DIR) -I$(RTAUDIO_DIR) $(shell pkg-config ftgl --cflags)
 LIBS = -lGL -lGLU -lglut -lGLEW -lpthread /usr/local/lib/libfftw3.a \
-	$(shell pkg-config ftgl --libs)
+	$(shell pkg-config ftgl --libs) \
+	$(RTAUDIO_DIR)/librtaudio.a -lasound -lpthread
 endif
 
 # for macosx
