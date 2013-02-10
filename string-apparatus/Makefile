@@ -26,10 +26,17 @@ endif
 # for macosx
 # NOTE for mac you have to use the GLSL 1.2 shaders....
 ifeq   "$(HOST_PLATFORM)" "i686-apple-darwin11"
-RTAUDIO_DIR = /Users/tebo/Software/rtaudio-4.0.10
-INCLUDES = -I$(INC_DIR) -framework OpenGL -framework GLUT -DUSE_APPLE_VERTEXARRAYS \
-	-I$(RTAUDIO_DIR)
-LIBS = -L$(RTAUDIO_DIR)
+RTAUDIO_DIR = rtaudio-4.0.10
+INCLUDES = -I$(INC_DIR) \
+	-framework OpenGL \
+	-framework GLUT -DUSE_APPLE_VERTEXARRAYS \
+	-I$(RTAUDIO_DIR) \
+	-I/usr/X11/include -I/usr/X11/include/freetype2
+
+LIBS = $(RTAUDIO_DIR)/librtaudio.a \
+	-lpthread -framework CoreAudio -framework CoreFoundation \
+	-L/usr/X11/lib -lftgl \
+	-L/usr/local/lib -lfftw3
 endif
 
 SSG_INCS = $(INC_DIR)/ssg.h \
@@ -56,7 +63,7 @@ string-apparatus : string-apparatus.cpp \
 		StringModel.o \
 		ui.o \
 		$(LIB_DIR)/ssg.a \
-		-I$(RTAUDIO_DIR) -L$(RTAUDIO_DIR) -lrtaudio \
+		-I$(RTAUDIO_DIR)  \
 		$(LIBS)
 
 

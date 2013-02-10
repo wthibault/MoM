@@ -1,0 +1,238 @@
+libftgl_la-FTGlyph.lo libftgl_la-FTGlyph.o: FTGlyph/FTGlyph.cpp \
+  ../config.h FTGL/ftgl.h /usr/X11/include/ft2build.h \
+  /usr/X11/include/freetype2/freetype/config/ftheader.h \
+  /usr/X11/include/freetype2/freetype/freetype.h \
+  /usr/X11/include/freetype2/freetype/config/ftconfig.h \
+  /usr/X11/include/freetype2/freetype/config/ftoption.h \
+  /usr/X11/include/freetype2/freetype/config/ftstdlib.h \
+  /usr/llvm-gcc-4.2/bin/../lib/gcc/i686-apple-darwin11/4.2.1/include/stddef.h \
+  /usr/llvm-gcc-4.2/bin/../lib/gcc/i686-apple-darwin11/4.2.1/include/limits.h \
+  /usr/llvm-gcc-4.2/bin/../lib/gcc/i686-apple-darwin11/4.2.1/include/syslimits.h \
+  /Developer/usr/llvm-gcc-4.2/lib/gcc/i686-apple-darwin11/4.2.1/include/limits.h \
+  /Developer/usr/llvm-gcc-4.2/lib/gcc/i686-apple-darwin11/4.2.1/include/syslimits.h \
+  /usr/include/limits.h /usr/include/sys/cdefs.h \
+  /usr/include/sys/_symbol_aliasing.h \
+  /usr/include/sys/_posix_availability.h /usr/include/machine/limits.h \
+  /usr/include/i386/limits.h /usr/include/i386/_limits.h \
+  /usr/include/sys/syslimits.h /usr/include/string.h \
+  /usr/include/_types.h /usr/include/sys/_types.h \
+  /usr/include/machine/_types.h /usr/include/i386/_types.h \
+  /usr/include/Availability.h /usr/include/AvailabilityInternal.h \
+  /usr/include/strings.h /usr/include/stdio.h /usr/include/stdlib.h \
+  /usr/include/sys/wait.h /usr/include/sys/signal.h \
+  /usr/include/sys/appleapiopts.h /usr/include/machine/signal.h \
+  /usr/include/i386/signal.h /usr/include/i386/_structs.h \
+  /usr/include/sys/_structs.h /usr/include/machine/_structs.h \
+  /usr/include/mach/i386/_structs.h /usr/include/sys/resource.h \
+  /usr/include/machine/endian.h /usr/include/i386/endian.h \
+  /usr/include/sys/_endian.h /usr/include/libkern/_OSByteOrder.h \
+  /usr/include/libkern/i386/_OSByteOrder.h /usr/include/alloca.h \
+  /usr/include/machine/types.h /usr/include/i386/types.h \
+  /usr/include/i386/_types.h /usr/include/setjmp.h \
+  /usr/include/machine/setjmp.h /usr/include/i386/setjmp.h \
+  /usr/llvm-gcc-4.2/bin/../lib/gcc/i686-apple-darwin11/4.2.1/include/stdarg.h \
+  /usr/include/AvailabilityMacros.h /usr/include/stdint.h \
+  /usr/X11/include/freetype2/freetype/fterrors.h \
+  /usr/X11/include/freetype2/freetype/ftmoderr.h \
+  /usr/X11/include/freetype2/freetype/fterrdef.h \
+  /usr/X11/include/freetype2/freetype/fttypes.h \
+  /usr/X11/include/freetype2/freetype/ftsystem.h \
+  /usr/X11/include/freetype2/freetype/ftimage.h \
+  /usr/X11/include/freetype2/freetype/ftglyph.h \
+  /usr/X11/include/freetype2/freetype/ftoutln.h FTGL/FTPoint.h \
+  FTGL/FTBBox.h FTGL/FTBuffer.h FTGL/FTGlyph.h FTGL/FTBitmapGlyph.h \
+  FTGL/FTBufferGlyph.h FTGL/FTExtrdGlyph.h FTGL/FTOutlineGlyph.h \
+  FTGL/FTPixmapGlyph.h FTGL/FTPolyGlyph.h FTGL/FTTextureGlyph.h \
+  FTGL/FTFont.h FTGL/FTGLBitmapFont.h FTGL/FTBufferFont.h \
+  FTGL/FTGLExtrdFont.h FTGL/FTGLOutlineFont.h FTGL/FTGLPixmapFont.h \
+  FTGL/FTGLPolygonFont.h FTGL/FTGLTextureFont.h FTGL/FTLayout.h \
+  FTGL/FTSimpleLayout.h FTInternals.h FTGL/ftgl.h \
+  /System/Library/Frameworks/OpenGL.framework/Headers/gl.h \
+  /System/Library/Frameworks/OpenGL.framework/Headers/glext.h \
+  /usr/include/inttypes.h \
+  /System/Library/Frameworks/OpenGL.framework/Headers/glu.h \
+  FTGlyph/FTGlyphImpl.h
+
+../config.h:
+
+FTGL/ftgl.h:
+
+/usr/X11/include/ft2build.h:
+
+/usr/X11/include/freetype2/freetype/config/ftheader.h:
+
+/usr/X11/include/freetype2/freetype/freetype.h:
+
+/usr/X11/include/freetype2/freetype/config/ftconfig.h:
+
+/usr/X11/include/freetype2/freetype/config/ftoption.h:
+
+/usr/X11/include/freetype2/freetype/config/ftstdlib.h:
+
+/usr/llvm-gcc-4.2/bin/../lib/gcc/i686-apple-darwin11/4.2.1/include/stddef.h:
+
+/usr/llvm-gcc-4.2/bin/../lib/gcc/i686-apple-darwin11/4.2.1/include/limits.h:
+
+/usr/llvm-gcc-4.2/bin/../lib/gcc/i686-apple-darwin11/4.2.1/include/syslimits.h:
+
+/Developer/usr/llvm-gcc-4.2/lib/gcc/i686-apple-darwin11/4.2.1/include/limits.h:
+
+/Developer/usr/llvm-gcc-4.2/lib/gcc/i686-apple-darwin11/4.2.1/include/syslimits.h:
+
+/usr/include/limits.h:
+
+/usr/include/sys/cdefs.h:
+
+/usr/include/sys/_symbol_aliasing.h:
+
+/usr/include/sys/_posix_availability.h:
+
+/usr/include/machine/limits.h:
+
+/usr/include/i386/limits.h:
+
+/usr/include/i386/_limits.h:
+
+/usr/include/sys/syslimits.h:
+
+/usr/include/string.h:
+
+/usr/include/_types.h:
+
+/usr/include/sys/_types.h:
+
+/usr/include/machine/_types.h:
+
+/usr/include/i386/_types.h:
+
+/usr/include/Availability.h:
+
+/usr/include/AvailabilityInternal.h:
+
+/usr/include/strings.h:
+
+/usr/include/stdio.h:
+
+/usr/include/stdlib.h:
+
+/usr/include/sys/wait.h:
+
+/usr/include/sys/signal.h:
+
+/usr/include/sys/appleapiopts.h:
+
+/usr/include/machine/signal.h:
+
+/usr/include/i386/signal.h:
+
+/usr/include/i386/_structs.h:
+
+/usr/include/sys/_structs.h:
+
+/usr/include/machine/_structs.h:
+
+/usr/include/mach/i386/_structs.h:
+
+/usr/include/sys/resource.h:
+
+/usr/include/machine/endian.h:
+
+/usr/include/i386/endian.h:
+
+/usr/include/sys/_endian.h:
+
+/usr/include/libkern/_OSByteOrder.h:
+
+/usr/include/libkern/i386/_OSByteOrder.h:
+
+/usr/include/alloca.h:
+
+/usr/include/machine/types.h:
+
+/usr/include/i386/types.h:
+
+/usr/include/i386/_types.h:
+
+/usr/include/setjmp.h:
+
+/usr/include/machine/setjmp.h:
+
+/usr/include/i386/setjmp.h:
+
+/usr/llvm-gcc-4.2/bin/../lib/gcc/i686-apple-darwin11/4.2.1/include/stdarg.h:
+
+/usr/include/AvailabilityMacros.h:
+
+/usr/include/stdint.h:
+
+/usr/X11/include/freetype2/freetype/fterrors.h:
+
+/usr/X11/include/freetype2/freetype/ftmoderr.h:
+
+/usr/X11/include/freetype2/freetype/fterrdef.h:
+
+/usr/X11/include/freetype2/freetype/fttypes.h:
+
+/usr/X11/include/freetype2/freetype/ftsystem.h:
+
+/usr/X11/include/freetype2/freetype/ftimage.h:
+
+/usr/X11/include/freetype2/freetype/ftglyph.h:
+
+/usr/X11/include/freetype2/freetype/ftoutln.h:
+
+FTGL/FTPoint.h:
+
+FTGL/FTBBox.h:
+
+FTGL/FTBuffer.h:
+
+FTGL/FTGlyph.h:
+
+FTGL/FTBitmapGlyph.h:
+
+FTGL/FTBufferGlyph.h:
+
+FTGL/FTExtrdGlyph.h:
+
+FTGL/FTOutlineGlyph.h:
+
+FTGL/FTPixmapGlyph.h:
+
+FTGL/FTPolyGlyph.h:
+
+FTGL/FTTextureGlyph.h:
+
+FTGL/FTFont.h:
+
+FTGL/FTGLBitmapFont.h:
+
+FTGL/FTBufferFont.h:
+
+FTGL/FTGLExtrdFont.h:
+
+FTGL/FTGLOutlineFont.h:
+
+FTGL/FTGLPixmapFont.h:
+
+FTGL/FTGLPolygonFont.h:
+
+FTGL/FTGLTextureFont.h:
+
+FTGL/FTLayout.h:
+
+FTGL/FTSimpleLayout.h:
+
+FTInternals.h:
+
+FTGL/ftgl.h:
+
+/System/Library/Frameworks/OpenGL.framework/Headers/gl.h:
+
+/System/Library/Frameworks/OpenGL.framework/Headers/glext.h:
+
+/usr/include/inttypes.h:
+
+/System/Library/Frameworks/OpenGL.framework/Headers/glu.h:
+
+FTGlyph/FTGlyphImpl.h:
