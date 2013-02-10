@@ -10,6 +10,47 @@
 #include <RtAudio.h>
 #include <fftw3.h>
 
+class RingBuffer {
+public:
+  RingBuffer ( unsigned int numFrames ) {
+    totalFrames = 2*numFrames;
+    data = new double [ totalFrames ];
+    tail = 0;
+  }
+  ~RingBuffer() { delete data; }
+  inline void append ( double *buffer, unsigned int nFrames ) {
+    double *d = data + tail;
+    if ( d+2*nFrames > data+totalFrames ) {
+      // just fix tail each time
+      for ( int i = 0; i < 2 * nFrames; i++ ) {
+	*d++ = *buffer++;
+	tail = (tail + 1) % totalFrames;
+      }
+    } else {
+      for ( int i = 0; i < 2 * nFrames; i++ ) {
+	*d++ = *buffer++;
+      }
+      tail = (tail + 2*nFrames) % totalFrames;
+    }
+  }
+  inline void copyReversed ( double *dest, unsigned int numFrames, int stride ) {
+    int index = tail;
+    for ( int i = 0; i < numFrames; i++ ) {
+      *dest++ = data[index];
+      index = (index - stride);
+      if (index < 0)
+	index += totalFrames;
+    }
+  }
+  int tail;
+  int totalFrames;
+  double *data;
+};
+
+
+//////////////////////////////////////////////////////
+
+
 struct StringModel {
   StringModel ( int n, 
 		double _Ktension, 
@@ -69,4 +110,7 @@ struct StringModel {
   fftw_plan     fftwPlan;
   double       *fftwIn;
   fftw_complex *fftwOut;
+  int           numFramesToAnalyze;
+  RingBuffer    ringBuffer;
 };
+

@@ -9,6 +9,8 @@
 // BEGIN pure c++ audio computation
 // --no calls to the outside world allowed
 
+
+
 // don't call this unless there are two samples on either side of i!!!!
 inline
 double
@@ -145,12 +147,17 @@ StringModel::computeSamples ( double *soundout, unsigned int nBufferFrames )
 void
 StringModel::analyze (double *buffer, unsigned int nBufferFrames)
 {
+#if 0
   // get the left channel for now
   for (unsigned int i = 0; i < nBufferFrames; i++ ) {
     fftwIn[i] = buffer[2*i];
   }
   fftw_execute ( fftwPlan );
   //  std::cout << "\rdc = " << fftwOut[0][0] << std::endl;
+#else
+  // dont do the analysis here, but tuck away this buffer for later
+  ringBuffer.append ( buffer, nBufferFrames );
+#endif
 }
 
 void
@@ -251,7 +258,9 @@ StringModel::StringModel ( int n,
       vibratorAmplitude ( 0.001f ),
       vibratorPhase ( 0.0 ),
       compressionThreshold ( -10.0 ),
-      compressionRatio ( 0.5 )
+      compressionRatio ( 0.5 ),
+      numFramesToAnalyze ( 8 * _bufferFrames ),
+      ringBuffer ( numFramesToAnalyze * 2 )
 {
   std::cout << "StringModel N,K_t,K_d,ss: " 
 	    << numMasses << ',' 
@@ -282,9 +291,10 @@ StringModel::StringModel ( int n,
   pluck();
 
   // set up the fft
-  fftwIn = (double *)        fftw_malloc(sizeof(double)*bufferFrames);
-  fftwOut = (fftw_complex *) fftw_malloc ( sizeof(fftw_complex) * (bufferFrames/2 + 1) );
-  fftwPlan = fftw_plan_dft_r2c_1d ( bufferFrames, fftwIn, fftwOut, FFTW_MEASURE );
+  // XXX move this into FFTPrimitive XXX ???
+  fftwIn = (double *)        fftw_malloc(sizeof(double)*numFramesToAnalyze);
+  fftwOut = (fftw_complex *) fftw_malloc ( sizeof(fftw_complex) * numFramesToAnalyze/2 + 1);
+  fftwPlan = fftw_plan_dft_r2c_1d ( numFramesToAnalyze, fftwIn, fftwOut, FFTW_MEASURE );
 }
 
 StringModel::~StringModel() 

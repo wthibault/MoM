@@ -165,8 +165,9 @@ public:
     normals_.clear();
     indices_.clear();
     texCoords_.clear();
-    float step = 1.0 / theString_->bufferFrames/2;
-    for ( int i = 0; i < theString_->bufferFrames/2; i++ ) {
+    int nFreqBins = theString_->numFramesToAnalyze / 4;
+    float step = 1.0 / nFreqBins;
+    for ( int i = 0; i < nFreqBins; i++ ) {
       points_.push_back ( glm::vec3(i*step, 0.0, 0) );
       points_.push_back ( glm::vec3(i*step, 1.0, 0) );
       normals_.push_back ( glm::vec3(0,0,1) );
@@ -182,17 +183,25 @@ public:
 
   void update(float dt) 
   {
+    // setup the fft
+    // XXX move out of string into here XXX
+    // copy them backwards, same diff to the fft.
+    theString_->ringBuffer.copyReversed ( theString_->fftwIn, theString_->numFramesToAnalyze, 2 );
+
+    // run the fft on them
+    fftw_execute ( theString_->fftwPlan );
+
+    // load the geometry into the vao
     points_.clear();
     indices_.clear();
     normals_.clear();
     texCoords_.clear();
 
-    int middle = theString_->bufferFrames/2;
-    float deltaX = 1.0 / theString_->bufferFrames/2;
-    for ( int i = 0; i < theString_->bufferFrames/2; i++ ) {
+    int nFreqBins = theString_->numFramesToAnalyze / 4;
+    float deltaX = 1.0 / nFreqBins;
+    for ( int i = 0; i < nFreqBins; i++ ) {
       float x,y,z;
       x = i * deltaX;
-      //      y = 20*log10((theString_->fftwOut[i][0]));
       y = 20*log10(fabs(theString_->fftwOut[i][0]));
       z = 0;
       points_.push_back( glm::vec3 ( x,-100,z ) );
@@ -235,6 +244,7 @@ public:
   }
 
   StringModel *theString_;
+  
 };
 ///////////////////////////////////////////////////////////////////////
 
@@ -471,8 +481,8 @@ init (int argc, char **argv)
 
   // audio params
   int sampleRate = 44100;
-  //  unsigned int bufferFrames = 256; // 256 sample frames ~ 5ms 
-  unsigned int bufferFrames = 1024; // 256 sample frames ~ 5ms 
+  unsigned int bufferFrames = 256; // 256 sample frames ~ 5ms 
+  //  unsigned int bufferFrames = 1024; // 256 sample frames ~ 5ms 
 
   // the simulation 
   theString = new StringModel ( 1000, 0.01, 0.99999, 2, sampleRate, bufferFrames );
@@ -517,7 +527,7 @@ init (int argc, char **argv)
   Instance *fftTransform = new Instance;
   fftTransform->addChild ( fft );
   fftTransform->setMatrix ( glm::scale ( glm::translate ( glm::mat4(), glm::vec3 (-1.5,-1.5,0.5) ),
-					 glm::vec3(8,1/128.0,1) ) );
+					 glm::vec3(2,1/128.0,1) ) );
   instance->addChild ( fftTransform );
 
   Material *fftmat = new Material;
