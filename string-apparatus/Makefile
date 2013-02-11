@@ -1,5 +1,5 @@
 #OPTS = -g
-OPTS = -O3
+OPTS = -O3 
 
 # change these for your system
 INC_DIR=../../4848/ssg/include
@@ -17,9 +17,14 @@ endif
 
 ifeq   "$(HOST_PLATFORM)" "x86_64-linux-gnu"
 #for sn336,sn148, ubuntu 
+# for package libfft3w-dev
+FFTW=/usr/lib/libfftw3.a
+# for build from source, with default prefix (/usr/local)
+#FFTW=/usr/local/lib/libfftw3.a
 RTAUDIO_DIR = ./rtaudio-4.0.10
 INCLUDES = -I$(INC_DIR) -I$(RTAUDIO_DIR) $(shell pkg-config ftgl --cflags)
-LIBS = -lGL -lGLU -lglut -lGLEW -lpthread /usr/local/lib/libfftw3.a \
+LIBS = -lGL -lGLU -lglut -lGLEW \
+	-lpthread $(FFTW) \
 	$(shell pkg-config ftgl --libs) \
 	$(RTAUDIO_DIR)/librtaudio.a -lasound -lpthread
 endif

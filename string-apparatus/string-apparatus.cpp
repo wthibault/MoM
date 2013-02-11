@@ -642,8 +642,12 @@ init (int argc, char **argv)
   }
 
   // the rendering
-  //  StringModelPrimitive *smp = new StringModelPrimitive ( theString );
+#ifdef USE_HISTOGRAMS
   StringModelHistogramPrimitive *smp = new StringModelHistogramPrimitive ( theString );
+#else
+  StringModelPrimitive *smp = new StringModelPrimitive ( theString );
+#endif
+
   instance->addChild ( smp );
 
   FFTPrimitive *fft = new FFTPrimitive ( theString );

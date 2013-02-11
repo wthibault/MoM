@@ -76,11 +76,6 @@ StringModel::computeSamples ( double *soundout, unsigned int nBufferFrames )
   int iters = nBufferFrames * simulationStepsPerSample;
   double *buf = soundout;
 
-  // XXX clear histograms from renderer
-  //  for ( int i = 0; i < numMasses-1; i++ ) {
-  //    histograms[i].clear();
-  //  }
-
   for ( int t = 0; t < iters; t++ ) {
 
     double sum = 0;
@@ -101,7 +96,9 @@ StringModel::computeSamples ( double *soundout, unsigned int nBufferFrames )
     // use first order curvature est
     for ( i = 1; i < n-1; i++ ) {
       updateElement1 ( i );
+#ifdef USE_HISTOGRAMS
       histograms[i].update ( y[i] );
+#endif
     }
 
     double *tmp = y;
