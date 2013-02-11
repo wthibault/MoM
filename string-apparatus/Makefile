@@ -80,6 +80,7 @@ $(SSG_DATA)/objfiles/string-apparatus.obj : blender/string-apparatus.obj
 
 clean :
 	rm -f *.o
+	rm -f shaders/*~
 	rm -f *~
 	rm -f string-apparatus
 	rm -rf *.dSYM

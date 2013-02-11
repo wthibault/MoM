@@ -10,6 +10,57 @@
 #include <RtAudio.h>
 #include <fftw3.h>
 
+////////////////////////////////////////////////////
+
+
+
+class Histogram {
+ public:
+  Histogram ( unsigned int num_bins, double minRange, double maxRange ) 
+    : numBins ( num_bins ),
+    minVal ( minRange ),
+    maxVal ( maxRange ),
+    bins ( new unsigned int[num_bins] ) 
+      {
+	bins = new unsigned int [numBins];
+	clear();
+      }
+  Histogram () 
+    :  numBins ( 256 ), 
+       minVal ( -1.0 ), 
+       maxVal ( 1.0 ) 
+	 { 
+	   bins = new unsigned int [numBins];
+	   clear(); 
+	 }
+  ~Histogram () { delete bins; }
+  void clear () {
+    for (int i = 0; i < numBins; i++ ) {
+      bins[i] = 0;
+    }
+  }
+  inline void update ( double val ) {
+    if ( val < minVal ) minVal = val;
+    if ( val > maxVal ) maxVal = val;
+    int bin;
+    if ( maxVal - minVal < 1e-6 )
+      bin = 0;
+    else
+      bin = static_cast<int> ( (numBins-1) * ( (val - minVal) / (maxVal - minVal) ) ); // truncate
+    bins[bin]++;
+  }
+  unsigned int *bins;
+  unsigned int numBins;
+  double minVal;
+  double maxVal;
+};
+
+
+
+////////////////////////////////////////////////////
+
+
+
 class RingBuffer {
 public:
   RingBuffer ( unsigned int numFrames ) {
@@ -112,5 +163,7 @@ struct StringModel {
   fftw_complex *fftwOut;
   int           numFramesToAnalyze;
   RingBuffer    ringBuffer;
+
+  Histogram    *histograms;
 };
 

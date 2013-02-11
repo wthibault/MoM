@@ -5,6 +5,8 @@
 #include "StringModel.h"
 
 
+// XXX use a histogram for the modulation transfer function cf. http://spie.org/x34359.xml
+
 //////////////////////////////////////////
 // BEGIN pure c++ audio computation
 // --no calls to the outside world allowed
@@ -74,6 +76,11 @@ StringModel::computeSamples ( double *soundout, unsigned int nBufferFrames )
   int iters = nBufferFrames * simulationStepsPerSample;
   double *buf = soundout;
 
+  // XXX clear histograms from renderer
+  //  for ( int i = 0; i < numMasses-1; i++ ) {
+  //    histograms[i].clear();
+  //  }
+
   for ( int t = 0; t < iters; t++ ) {
 
     double sum = 0;
@@ -94,6 +101,7 @@ StringModel::computeSamples ( double *soundout, unsigned int nBufferFrames )
     // use first order curvature est
     for ( i = 1; i < n-1; i++ ) {
       updateElement1 ( i );
+      histograms[i].update ( y[i] );
     }
 
     double *tmp = y;
@@ -156,6 +164,7 @@ StringModel::analyze (double *buffer, unsigned int nBufferFrames)
   //  std::cout << "\rdc = " << fftwOut[0][0] << std::endl;
 #else
   // dont do the analysis here, but tuck away this buffer for later
+  // analysis by FFTPrimitive, as needed for rendering.
   ringBuffer.append ( buffer, nBufferFrames );
 #endif
 }
@@ -295,6 +304,12 @@ StringModel::StringModel ( int n,
   fftwIn = (double *)        fftw_malloc(sizeof(double)*numFramesToAnalyze);
   fftwOut = (fftw_complex *) fftw_malloc ( sizeof(fftw_complex) * numFramesToAnalyze/2 + 1);
   fftwPlan = fftw_plan_dft_r2c_1d ( numFramesToAnalyze, fftwIn, fftwOut, FFTW_MEASURE );
+
+  // setup the histograms: one per mass! for "vibration modulation transfer function" estimate
+  //  for ( int i = 0; i < numMasses; i++ ) {
+    histograms = new Histogram [numMasses]; // ( 256, -1.0, 1.0 );
+    //  }
+
 }
 
 StringModel::~StringModel() 
