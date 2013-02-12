@@ -11,3 +11,7 @@ string-model
 	finite element string model
 
 	includes a realtime 3D visualization of a string
+
+string-apparatus
+
+	improved string model visualization
