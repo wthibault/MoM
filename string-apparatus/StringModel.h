@@ -84,13 +84,33 @@ public:
       tail = (tail + 2*nFrames) % totalFrames;
     }
   }
-  inline void copyReversed ( double *dest, unsigned int numFrames, int stride ) {
+  inline double windowFunction ( double x ) {
+    // x should be between 0 and 1
+    // type this into octave to visualize:
+    // function y=g(x)
+    // y= 0.5 .* ( 1 .+ cos ( pi .* (x*2-1) ) );
+    // endfunction 
+    // plot(x,g(x))
+
+    return 0.5 * ( 1.0 + cos ( M_PI * (x*2-1) ) ); // Hanning window, definite integral over [0,1] is 1.0
+  }
+  inline void copyReversed ( double *dest, unsigned int numFrames, int stride, bool windowed = true ) {
     int index = tail;
-    for ( int i = 0; i < numFrames; i++ ) {
-      *dest++ = data[index];
-      index = (index - stride);
-      if (index < 0)
-	index += totalFrames;
+    if ( windowed ) {
+      double incr = 1.0 / numFrames;
+      for ( int i = 0; i < numFrames; i++ ) {
+	*dest++ = windowFunction ( index * incr ) * data[index];
+	index = (index - stride);
+	if (index < 0)
+	  index += totalFrames;
+      }
+    } else {
+      for ( int i = 0; i < numFrames; i++ ) {
+	*dest++ = data[index];
+	index = (index - stride);
+	if (index < 0)
+	  index += totalFrames;
+      }
     }
   }
   int tail;
