@@ -604,7 +604,7 @@ init (int argc, char **argv)
   // audio params
   int sampleRate = 44100;
   unsigned int bufferFrames = 256; // 256 sample frames ~ 5ms 
-  //  unsigned int bufferFrames = 1024; // 256 sample frames ~ 5ms 
+  //unsigned int bufferFrames = 1024; // 256 sample frames ~ 5ms 
 
   // the simulation 
   theString = new StringModel ( 1000, 0.01, 0.99999, 2, sampleRate, bufferFrames );

@@ -299,7 +299,7 @@ StringModel::StringModel ( int n,
   // set up the fft
   // XXX move this into FFTPrimitive XXX ???
   fftwIn = (double *)        fftw_malloc(sizeof(double)*numFramesToAnalyze);
-  fftwOut = (fftw_complex *) fftw_malloc ( sizeof(fftw_complex) * numFramesToAnalyze/2 + 1);
+  fftwOut = (fftw_complex *) fftw_malloc ( sizeof(fftw_complex) * (numFramesToAnalyze/2 + 1));
   fftwPlan = fftw_plan_dft_r2c_1d ( numFramesToAnalyze, fftwIn, fftwOut, FFTW_MEASURE );
 
   // setup the histograms: one per mass! for "vibration modulation transfer function" estimate
