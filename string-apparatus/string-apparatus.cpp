@@ -287,7 +287,7 @@ public:
     normals_.clear();
     indices_.clear();
     texCoords_.clear();
-    int nFreqBins = theString_->numFramesToAnalyze / 4;
+    int nFreqBins = theString_->numFramesToAnalyze / 2;
     float step = 1.0 / nFreqBins;
     for ( int i = 0; i < nFreqBins; i++ ) {
       points_.push_back ( glm::vec3(i*step, 0.0, 0) );
@@ -319,7 +319,7 @@ public:
     normals_.clear();
     texCoords_.clear();
 
-    int nFreqBins = theString_->numFramesToAnalyze / 4;
+    int nFreqBins = theString_->numFramesToAnalyze / 2;
     float deltaX = 1.0 / nFreqBins;
     for ( int i = 0; i < nFreqBins; i++ ) {
       float x,y,z;
@@ -607,7 +607,7 @@ init (int argc, char **argv)
   //unsigned int bufferFrames = 1024; // 256 sample frames ~ 5ms 
 
   // the simulation 
-  theString = new StringModel ( 1000, 0.01, 0.99999, 2, sampleRate, bufferFrames );
+  theString = new StringModel ( NUM_MASSES, 0.01, 0.99999, 2, sampleRate, bufferFrames );
 
   // the audio
   if ( dac.getDeviceCount() < 1 ) {
@@ -700,7 +700,7 @@ main(int argc, char** argv)
   glutDisplayFunc(display);
   glutReshapeFunc(reshape);
   glutKeyboardFunc(keyboard);
-  glutTimerFunc(16,timer,16); 
+  glutTimerFunc(REFRESH_PERIOD,timer,REFRESH_PERIOD); 
   glutMainLoop();
   return 0;
 }

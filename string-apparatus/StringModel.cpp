@@ -5,7 +5,7 @@
 #include "StringModel.h"
 
 
-// XXX use a histogram for the modulation transfer function cf. http://spie.org/x34359.xml
+// XXX use a vibration modulation transfer function cf. http://spie.org/x34359.xml
 
 //////////////////////////////////////////
 // BEGIN pure c++ audio computation
@@ -300,7 +300,7 @@ StringModel::StringModel ( int n,
   // XXX move this into FFTPrimitive XXX ???
   fftwIn = (double *)        fftw_malloc(sizeof(double)*numFramesToAnalyze);
   fftwOut = (fftw_complex *) fftw_malloc ( sizeof(fftw_complex) * (numFramesToAnalyze/2 + 1));
-  fftwPlan = fftw_plan_dft_r2c_1d ( numFramesToAnalyze, fftwIn, fftwOut, FFTW_MEASURE );
+  fftwPlan = fftw_plan_dft_r2c_1d ( numFramesToAnalyze, fftwIn, fftwOut, FFTW_ESTIMATE );
 
   // setup the histograms: one per mass! for "vibration modulation transfer function" estimate
   //  for ( int i = 0; i < numMasses; i++ ) {
