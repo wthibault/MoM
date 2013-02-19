@@ -42,12 +42,14 @@ class Histogram {
   inline void update ( double val ) {
     if ( val < minVal ) minVal = val;
     if ( val > maxVal ) maxVal = val;
+#if USE_HISTOGRAM_BINS
     int bin;
     if ( maxVal - minVal < 1e-6 )
       bin = 0;
     else
       bin = static_cast<int> ( (numBins-1) * ( (val - minVal) / (maxVal - minVal) ) ); // truncate
     bins[bin]++;
+#endif
   }
   unsigned int *bins;
   unsigned int numBins;

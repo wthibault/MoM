@@ -1,5 +1,5 @@
 #OPTS = -g
-OPTS = -O3 
+OPTS = -O3 -DUSE_HISTOGRAMS
 
 # change these for your system
 INC_DIR=../../4848/ssg/include
@@ -24,8 +24,8 @@ FFTW=/usr/lib/libfftw3.a
 RTAUDIO_DIR = ./rtaudio-4.0.10
 INCLUDES = -I$(INC_DIR) -I$(RTAUDIO_DIR) $(shell pkg-config ftgl --cflags)
 LIBS = -lGL -lGLU -lglut -lGLEW \
-	-lpthread $(FFTW) \
 	$(shell pkg-config ftgl --libs) \
+	-lpthread $(FFTW) \
 	$(RTAUDIO_DIR)/librtaudio.a -lasound -lpthread
 endif
 
