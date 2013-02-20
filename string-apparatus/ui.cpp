@@ -52,11 +52,17 @@ UI::draw (int width, int height, StringModel *str)
   sprintf(buf,"damping  %9.7lf", str->Kdamping);
   printAt ( 0, 0.8*height, buf );
 
-  sprintf(buf,"v freq    %9.4lf", str->vibratorFreq);
+  sprintf(buf,"vib freq    %9.4lf Hz", str->vibratorFreq);
   printAt ( 0, 0.7*height, buf );
   
-  sprintf(buf,"v amp    %9.4lf", str->vibratorAmplitude);
+  sprintf(buf,"vib amp    %9.4lf mm", str->vibratorAmplitude*1000);
   printAt ( 0, 0.6*height, buf );
+
+  if ( str->vibratorOn ) 
+    sprintf(buf,"vib on");
+  else
+    sprintf(buf,"vib off");
+  printAt ( 0, 0.5*height, buf );
 
   
 }
