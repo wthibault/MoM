@@ -71,6 +71,7 @@ public:
     tail = 0;
   }
   ~RingBuffer() { delete data; }
+
   inline void append ( double *buffer, unsigned int nFrames ) {
     double *d = data + tail;
     if ( d+2*nFrames > data+totalFrames ) {
@@ -83,7 +84,7 @@ public:
       for ( int i = 0; i < 2 * nFrames; i++ ) {
 	*d++ = *buffer++;
       }
-      tail = (tail + 2*nFrames) % totalFrames;
+      tail = (tail + 2*nFrames); // % totalFrames;
     }
   }
 
@@ -104,7 +105,8 @@ public:
     if ( windowed ) {
       double incr = 1.0 / numFrames;
       for ( int i = 0; i < numFrames; i++ ) {
-	*dest++ = windowFunction ( index * incr ) * data[index];
+	//	*dest++ = windowFunction ( index * incr ) * data[index];
+	*dest++ = windowFunction ( i * incr ) * data[index];
 	index = (index - stride);
 	if (index < 0)
 	  index += totalFrames;

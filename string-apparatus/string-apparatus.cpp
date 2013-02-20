@@ -324,7 +324,8 @@ public:
     for ( int i = 0; i < nFreqBins; i++ ) {
       float x,y,z;
       x = i * deltaX;
-      y = 20*log10(fabs(theString_->fftwOut[i][0]));
+      //      y = 20*log10(max(1e-4,fabs(theString_->fftwOut[i][0])));
+            y = theString_->fftwOut[i][0];
       z = 0;
       points_.push_back( glm::vec3 ( x,-100,z ) );
       points_.push_back( glm::vec3 ( x,y,z ) );
