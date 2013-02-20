@@ -82,9 +82,18 @@ StringModel::computeSamples ( double *soundout, unsigned int nBufferFrames )
     int n = numMasses;
     int i;
     double accel;
+
+    // see a plot:
+    // octave:11> n=0:44100;
+    // octave:12> function y=digitalOsc(f,sr,n)
+    // > y = sin ( 2 .* pi .* f .* ( n ./ sr ));
+    // > endfunction
+    // octave:14> plot(n,digitalOsc(1,44100,n))
+
     if ( vibratorOn ) {
       y[0] = vibratorAmplitude * sin ( vibratorPhase );
-      vibratorPhase += (vibratorFreq / sampleRate) / simulationStepsPerSample;
+      vibratorPhase += ( 2*M_PI * vibratorFreq / sampleRate) 
+	                / simulationStepsPerSample;
       while ( vibratorPhase > 2*M_PI )
 	vibratorPhase -= 2*M_PI;
     } else {
