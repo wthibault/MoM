@@ -76,7 +76,7 @@ public:
     if ( d+2*nFrames > data+totalFrames ) {
       // just fix tail each time
       for ( int i = 0; i < 2 * nFrames; i++ ) {
-	*d++ = *buffer++;
+	data[tail] = *buffer++;
 	tail = (tail + 1) % totalFrames;
       }
     } else {
@@ -86,6 +86,7 @@ public:
       tail = (tail + 2*nFrames) % totalFrames;
     }
   }
+
   inline double windowFunction ( double x ) {
     // x should be between 0 and 1
     // type this into octave to visualize:
@@ -94,8 +95,10 @@ public:
     // endfunction 
     // plot(x,g(x))
 
-    return 0.5 * ( 1.0 + cos ( M_PI * (x*2-1) ) ); // Hanning window, definite integral over [0,1] is 1.0
+    // Hanning window, definite integral over [0,1] is 1.0
+    return 0.5 * ( 1.0 + cos ( M_PI * (x*2-1) ) ); 
   }
+
   inline void copyReversed ( double *dest, unsigned int numFrames, int stride, bool windowed = true ) {
     int index = tail;
     if ( windowed ) {
