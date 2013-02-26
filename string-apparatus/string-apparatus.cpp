@@ -149,7 +149,7 @@ class StringModelHistogramPrimitive : public ParticleSystem
 {
 public:
   StringModelHistogramPrimitive( StringModel *stringModel ) 
-    : theString_ ( stringModel ), renderScale_ ( 10.0 )
+    : theString_ ( stringModel ), renderScale_ ( 8.0 )
   {
     StringModelHistogramPrimitive::init();
   }
@@ -325,9 +325,9 @@ public:
       float x,y,z;
       x = i * deltaX;
       //      y = 20*log10(max(1e-4,fabs(theString_->fftwOut[i][0])));
-            y = theString_->fftwOut[i][0];
+      y = abs(theString_->fftwOut[i][0]);
       z = 0;
-      points_.push_back( glm::vec3 ( x,-100,z ) );
+      points_.push_back( glm::vec3 ( x,0,z ) );
       points_.push_back( glm::vec3 ( x,y,z ) );
       normals_.push_back ( glm::vec3(0,0,1) );
       normals_.push_back ( glm::vec3(0,0,1) );
