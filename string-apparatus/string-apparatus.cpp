@@ -5,11 +5,13 @@
 
 #include "ssg.h"
 #include <iomanip>
+#include <cmath>
 #include "ParticleSystem.h"
 #include "Trackball.h"
 #include "StringModel.h"
 #include <fftw3.h>
 #include "ui.h"
+
 
 using namespace glm;
 
@@ -561,6 +563,17 @@ keyboard (unsigned char key, int x, int y)
   }
 }
 
+
+void
+initOpacityValues ( float values[], int size )
+{
+  const float EPSILON = 1e-6;
+  for ( int i = 0; i < size; i++ ) {
+    float x = i / size;
+    values[i] = max ( 1.0, 1.0 / fmax ( EPSILON, M_PI * sqrt ( 1 - (2*x-1) * (2*x-1) ) ) );
+  }
+}
+
 void 
 init (int argc, char **argv)
 {
@@ -591,7 +604,7 @@ init (int argc, char **argv)
     mat->program = mat->loadShaders ( shader );
 
   // attach the material to the primitive
-  instance->setMaterial ( mat );
+  //  instance->setMaterial ( mat );
 
   // set the instance as the scene root
   root = instance;
@@ -622,7 +635,7 @@ init (int argc, char **argv)
   parameters.firstChannel = 0;
   RtAudio::StreamOptions options;
   options.flags |= RTAUDIO_SCHEDULE_REALTIME;
-  options.flags |= RTAUDIO_HOG_DEVICE;
+  //  options.flags |= RTAUDIO_HOG_DEVICE;
 
   dac.showWarnings ( true );
   try { 
@@ -645,6 +658,19 @@ init (int argc, char **argv)
   // the rendering
 #ifdef USE_HISTOGRAMS
   StringModelHistogramPrimitive *smp = new StringModelHistogramPrimitive ( theString );
+  Material *histoMat = new Material;
+  histoMat->ambient = vec4 ( 0,0,0,1 );
+  histoMat->diffuse = vec4 ( 1,1,1,1 );
+  histoMat->specular = vec4 ( 1,1,1,1 );
+  histoMat->shininess = 0.0;
+  histoMat->program = histoMat->loadShaders ( "MotionBlurredString" );
+  smp->setMaterial(histoMat);
+  // load the uniform array with the opacity function
+  // OMG this should be in a texture.
+  float opacityValues[256];
+  initOpacityValues ( opacityValues, 256 );
+  glUniform1fv(glGetUniformLocation(mat->program,"bins"), 256, opacityValues);
+
 #else
   StringModelPrimitive *smp = new StringModelPrimitive ( theString );
 #endif
