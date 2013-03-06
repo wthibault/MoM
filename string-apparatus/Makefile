@@ -18,11 +18,13 @@ endif
 ifeq   "$(HOST_PLATFORM)" "x86_64-linux-gnu"
 #for sn336,sn148, ubuntu 
 # for package libfft3w-dev
-FFTW=/usr/lib/libfftw3.a
+#FFTW=/usr/lib/libfftw3.a
 # for build from source, with default prefix (/usr/local)
 #FFTW=/usr/local/lib/libfftw3.a
+# for both , only not static linked...
+FFTW = $(shell pkg-config fftw3 --libs)
 RTAUDIO_DIR = ./rtaudio-4.0.10
-INCLUDES = -I$(INC_DIR) -I$(RTAUDIO_DIR) $(shell pkg-config ftgl --cflags)
+INCLUDES = -I$(INC_DIR) -I$(RTAUDIO_DIR) $(shell pkg-config ftgl --cflags) $(shell pkg-config fftw3 --cflags)
 LIBS = -lGL -lGLU -lglut -lGLEW \
 	$(shell pkg-config ftgl --libs) \
 	-lpthread $(FFTW) \
