@@ -569,8 +569,10 @@ initOpacityValues ( float values[], int size )
 {
   const float EPSILON = 1e-6;
   for ( int i = 0; i < size; i++ ) {
-    float x = i / size;
-    values[i] = max ( 1.0, 1.0 / fmax ( EPSILON, M_PI * sqrt ( 1 - (2*x-1) * (2*x-1) ) ) );
+    float x = float(i) / float(size);
+    //    values[i] = min ( 1.0, 1.0 / fmax ( EPSILON, M_PI * sqrt ( 1 - (2*x-1) * (2*x-1) ) ) );
+    values[i] = min ( 1.0, 1.0 / (M_PI * sqrt ( 1 - (2*x-1) * (2*x-1) )) );
+    std::cout << values[i] << std::endl;
   }
 }
 
@@ -614,6 +616,10 @@ init (int argc, char **argv)
   glEnable(GL_DEPTH_TEST);
   glPointSize(1.0);
   glLineWidth(1.0);
+
+  // for transparency
+  glEnable ( GL_BLEND );
+  glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 
   // audio params
   int sampleRate = 44100;
@@ -669,7 +675,7 @@ init (int argc, char **argv)
   // OMG this should be in a texture.
   float opacityValues[256];
   initOpacityValues ( opacityValues, 256 );
-  glUniform1fv(glGetUniformLocation(mat->program,"bins"), 256, opacityValues);
+  glUniform1fv(glGetUniformLocation(histoMat->program,"bins"), 256, opacityValues);
 
 #else
   StringModelPrimitive *smp = new StringModelPrimitive ( theString );
