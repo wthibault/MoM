@@ -405,7 +405,7 @@ reshape (int w, int h)
   height = h;
   glViewport (0, 0, (GLsizei) w, (GLsizei) h); 
   projectionMatrix = perspective ( 65.0f, (GLfloat) w / (GLfloat) h, 1.0f, 100.0f );
-  modelviewMatrix = translate ( mat4(), vec3(0,0,-4) );
+  modelviewMatrix = translate ( mat4(), vec3(0,0,-2) );
   float halfw = float(w)/2.0f;
   float halfh = float(h)/2.0f;
   trackball = Trackball ( halfw, halfh, fmin ( halfw, halfw ) );
@@ -620,6 +620,9 @@ init (int argc, char **argv)
   // for transparency
   glEnable ( GL_BLEND );
   glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+
+  glEnable ( GL_LINE_SMOOTH );
+  glHint ( GL_LINE_SMOOTH, GL_NICEST );
 
   // audio params
   int sampleRate = 44100;
