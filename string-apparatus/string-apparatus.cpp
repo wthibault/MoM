@@ -363,7 +363,10 @@ public:
     
     glBindVertexArray(0);
     
+    glDisable ( GL_DEPTH_TEST );
+    glLineWidth(2.0);
     Primitive::draw ( mv, proj, mat );
+    glEnable ( GL_DEPTH_TEST );
 
     //    printParams();
   }
@@ -621,8 +624,8 @@ init (int argc, char **argv)
   glEnable ( GL_BLEND );
   glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 
-  glEnable ( GL_LINE_SMOOTH );
-  glHint ( GL_LINE_SMOOTH, GL_NICEST );
+  //  glEnable ( GL_LINE_SMOOTH );
+  //  glHint ( GL_LINE_SMOOTH, GL_NICEST );
 
   // audio params
   int sampleRate = 44100;
