@@ -575,7 +575,7 @@ initOpacityValues ( float values[], int size )
     float x = float(i) / float(size);
     //    values[i] = min ( 1.0, 1.0 / fmax ( EPSILON, M_PI * sqrt ( 1 - (2*x-1) * (2*x-1) ) ) );
     values[i] = min ( 1.0, 1.0 / (M_PI * sqrt ( 1 - (2*x-1) * (2*x-1) )) );
-    std::cout << values[i] << std::endl;
+    //    std::cout << values[i] << std::endl;
   }
 }
 
@@ -584,7 +584,8 @@ init (int argc, char **argv)
 {
   
   // XXX this should pull it apart so we can move things
-  prim = new ObjFilePrimitive ( "objfiles/string-apparatus.obj" );
+  //  prim = new ObjFilePrimitive ( "objfiles/string-apparatus.obj" );
+  prim = new ObjFilePrimitive ( "objfiles/string-scene.obj" );
   // create a root Instance to contain this primitive
   Instance *instance = new Instance();
   instance->setMatrix ( mat4() );

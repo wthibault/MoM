@@ -87,6 +87,10 @@ $(SSG_DATA)/objfiles/string-apparatus.obj : blender/string-apparatus.obj
 	cp blender/string-apparatus.obj $(SSG_DATA)/objfiles
 	cp blender/string-apparatus.mtl $(SSG_DATA)/objfiles
 
+$(SSG_DATA)/objfiles/string-scene.obj : blender/string-scene.obj
+	cp blender/string-scene.obj $(SSG_DATA)/objfiles
+	cp blender/string-scene.mtl $(SSG_DATA)/objfiles
+
 clean :
 	rm -f *.o
 	rm -f shaders/*~
