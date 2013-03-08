@@ -616,7 +616,7 @@ init (int argc, char **argv)
   root = instance;
 
   // misc OpenGL state
-  glClearColor (0.0, 0.0, 0.0, 1.0);
+  glClearColor (0.2, 0.2, 0.5, 1.0);
   glEnable(GL_DEPTH_TEST);
   glPointSize(1.0);
   glLineWidth(1.0);

@@ -273,7 +273,7 @@ StringModel::StringModel ( int n,
       vibratorAmplitude ( 0.001f ),
       vibratorPhase ( 0.0 ),
       compressionThreshold ( -10.0 ),
-      compressionRatio ( 0.5 ),
+      compressionRatio ( 0.625 ),
       numFramesToAnalyze ( 8 * _bufferFrames ),
       ringBuffer ( numFramesToAnalyze * 2 )
 {
