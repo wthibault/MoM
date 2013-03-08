@@ -5,6 +5,8 @@
 #include <FL/Fl_Pack.H>
 #include <FL/Fl_Float_Input.H>
 #include <FL/Fl_Hor_Nice_Slider.H>
+#include <FL/FL_Light_Button.H>
+#include <FL/FL_Toggle_Button.H>
 #include <iostream>
 #ifndef __APPLE__
 #include <GL/glew.h>
@@ -16,7 +18,7 @@ using namespace glm;
 const int winWidth = 800;
 const int winHeight = 600;
 const int offsetWidgets = winHeight / 2;
-const int coarsefineHeight = (winHeight - offsetWidgets) / 5;
+const int coarsefineHeight = (winHeight - offsetWidgets) / 7;
 
 class MyWindow : public Fl_Gl_Window {
   void draw();
@@ -244,7 +246,57 @@ makeCoarseFineControl ( int w, int h, const char *label, Fl_Callback *fSlider, F
 }
 
 
-Fl_Group* makeControls(int x, int y, int width, int height)
+Fl_Group* makeVibControls(int x, int y, int width, int height)
+{
+  Fl_Pack *widgetPacker = new Fl_Pack( x,y,width,height);
+  widgetPacker->spacing(10);
+
+  Fl_Pack *h = new Fl_Pack ( 0,0,winWidth, coarsefineHeight );
+  h->type( Fl_Pack::HORIZONTAL );
+  
+  Fl_Light_Button *onbut = new Fl_Light_Button ( 0,0, 100, 20, "Vibrator on" );
+  h->add ( onbut );
+
+  Fl_Pack *buts = new Fl_Pack ( 0,0, 20, 100, "waveform" );
+  buts->type(Fl_Pack::VERTICAL);
+
+  Fl_Button* o = new Fl_Button(0,0, 20, 20, "sine");
+  o->tooltip("Set vibrator waveform to sine");
+  o->type(102);
+  o->selection_color((Fl_Color)1);
+  o->align(Fl_Align(FL_ALIGN_RIGHT));
+  buts->add(o);
+
+  o = new Fl_Button(0,0, 20, 20, "sawtooth");
+  o->tooltip("Set vibrator waveform to sawtooth");
+  o->type(102);
+  o->selection_color((Fl_Color)1);
+  o->align(Fl_Align(FL_ALIGN_RIGHT));
+  buts->add(o);
+  buts->end();
+
+  h->add(buts);
+
+  o = new Fl_Toggle_Button (0,0, 100,20, "constant energy");
+  o->tooltip("Turning on constant energy will cause the vibrator to have less amplitude at higher frequencies.  Turning it off makes it easier to find antinodes at higher frequencies.");
+  h->add(o);
+
+  widgetPacker->add(h);
+
+
+
+  Fl_Group *pack3 = makeCoarseFineControl(winWidth,coarsefineHeight,"Vib. Freq.", 
+					  sliderVibFreqCallback, inputVibFreqCallback);
+  widgetPacker->add(pack3);
+  Fl_Group *pack4 = makeCoarseFineControl(winWidth,coarsefineHeight,"Vib. Amp.", 
+					  sliderVibAmpCallback, inputVibAmpCallback );
+  widgetPacker->add(pack4);
+  widgetPacker->end();
+
+  return widgetPacker;
+}
+
+Fl_Group* makeStringControls(int x, int y, int width, int height)
 {
   //  Fl_Pack *widgetPacker = new Fl_Pack( 0, offsetWidgets, winWidth, winHeight - offsetWidgets );
   Fl_Pack *widgetPacker = new Fl_Pack( x,y,width,height);
@@ -256,12 +308,7 @@ Fl_Group* makeControls(int x, int y, int width, int height)
   Fl_Group *pack2 = makeCoarseFineControl(winWidth,coarsefineHeight,"Damping", 
 					  sliderDampingCallback, inputDampingCallback );
   widgetPacker->add(pack2);
-  Fl_Group *pack3 = makeCoarseFineControl(winWidth,coarsefineHeight,"Vib. Freq.", 
-					  sliderVibFreqCallback, inputVibFreqCallback);
-  widgetPacker->add(pack3);
-  Fl_Group *pack4 = makeCoarseFineControl(winWidth,coarsefineHeight,"Vib. Amp.", 
-					  sliderVibAmpCallback, inputVibAmpCallback );
-  widgetPacker->add(pack4);
+  widgetPacker->end();
 
   return widgetPacker;
 }
@@ -285,7 +332,8 @@ main(int argc, char **argv) {
   // pack some controls
 
   Fl_Pack *bottomWindow = new Fl_Pack( 0, offsetWidgets, winWidth, winHeight - offsetWidgets );
-  bottomWindow->add(makeControls(0,offsetWidgets,winWidth/2,winHeight/2-offsetWidgets));
+  bottomWindow->add(makeStringControls(0,offsetWidgets,winWidth/2,winHeight/2-offsetWidgets));
+  bottomWindow->add(makeVibControls(0,offsetWidgets,winWidth/2,winHeight/2-offsetWidgets));
   bottomWindow->add ( new Fl_Window ( winWidth/2, winHeight/2 ) ); // ?????
   bottomWindow->end();
 
