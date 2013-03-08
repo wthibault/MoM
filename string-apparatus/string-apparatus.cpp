@@ -668,9 +668,9 @@ init (int argc, char **argv)
 #ifdef USE_HISTOGRAMS
   StringModelHistogramPrimitive *smp = new StringModelHistogramPrimitive ( theString );
   Material *histoMat = new Material;
-  histoMat->ambient = vec4 ( 0,0,0,1 );
-  histoMat->diffuse = vec4 ( 1,1,1,1 );
-  histoMat->specular = vec4 ( 1,1,1,1 );
+  histoMat->ambient = vec4 ( 1,1,1,1 );
+  histoMat->diffuse = vec4 ( 0,0,0,1 );
+  histoMat->specular = vec4 ( 0,0,0,1 );
   histoMat->shininess = 0.0;
   histoMat->program = histoMat->loadShaders ( "MotionBlurredString" );
   smp->setMaterial(histoMat);
@@ -694,11 +694,12 @@ init (int argc, char **argv)
   instance->addChild ( fftTransform );
 
   Material *fftmat = new Material;
-  fftmat->ambient = vec4 ( 0.1, 0.1, 0.2, 1.0 );
-  fftmat->diffuse = vec4 ( 0.3, 0.3, 1.0, 1.0 );
-  fftmat->specular = vec4 ( 1.0, 1.0, 1.0, 1.0 );
-  fftmat->shininess = 133.0;
-  fft->setMaterial(fftmat);
+  fftmat->ambient = vec4 ( 1,1,1, 1.0 );
+  fftmat->diffuse = vec4 ( 0,0,0, 1.0 );
+  fftmat->specular = vec4 ( 0,0,0, 1.0 );
+  fftmat->shininess = 0.0;
+  fftmat->program = fftmat->loadShaders ( "PhongShading" );
+  fftTransform->setMaterial(fftmat);
 
 }
 
