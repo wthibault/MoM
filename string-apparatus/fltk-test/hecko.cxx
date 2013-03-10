@@ -5,8 +5,8 @@
 #include <FL/Fl_Pack.H>
 #include <FL/Fl_Float_Input.H>
 #include <FL/Fl_Hor_Nice_Slider.H>
-#include <FL/FL_Light_Button.H>
-#include <FL/FL_Toggle_Button.H>
+#include <FL/Fl_Light_Button.H>
+#include <FL/Fl_Toggle_Button.H>
 #include <iostream>
 #ifndef __APPLE__
 #include <GL/glew.h>
