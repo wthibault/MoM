@@ -246,28 +246,35 @@ makeCoarseFineControl ( int w, int h, const char *label, Fl_Callback *fSlider, F
 }
 
 
-Fl_Group* makeVibControls(int x, int y, int width, int height)
+Fl_Group* 
+makeVibControls(int x, int y, int width, int height)
 {
   Fl_Pack *widgetPacker = new Fl_Pack( x,y,width,height);
   widgetPacker->spacing(10);
 
-  Fl_Pack *h = new Fl_Pack ( 0,0,winWidth, coarsefineHeight );
-  h->type( Fl_Pack::HORIZONTAL );
+  //  Fl_Pack *h = new Fl_Pack ( 0,0,winWidth, coarsefineHeight );
+  //  h->type( Fl_Pack::HORIZONTAL );
+  Fl_Group *h = new Fl_Group ( 0,0,winWidth, coarsefineHeight );
   
-  Fl_Light_Button *onbut = new Fl_Light_Button ( 0,0, 100, 20, "Vibrator on" );
+  Fl_Light_Button *onbut = new Fl_Light_Button ( 0,0, 140, 20, "Vibrator on" );
   h->add ( onbut );
 
-  Fl_Pack *buts = new Fl_Pack ( 0,0, 20, 100, "waveform" );
+  Fl_Button *o = new Fl_Light_Button (0,20, 140,20, "constant energy");
+  o->tooltip("Turning on constant energy will cause the vibrator to have less amplitude at higher frequencies.  Turning it off makes it easier to find antinodes at higher frequencies.");
+  h->add(o);
+
+  Fl_Pack *buts = new Fl_Pack ( 150,0, 20, coarsefineHeight, "" );
   buts->type(Fl_Pack::VERTICAL);
 
-  Fl_Button* o = new Fl_Button(0,0, 20, 20, "sine");
+  o = new Fl_Button(0,0, 20, 20, "sine");
   o->tooltip("Set vibrator waveform to sine");
   o->type(102);
   o->selection_color((Fl_Color)1);
   o->align(Fl_Align(FL_ALIGN_RIGHT));
+  o->value(1);
   buts->add(o);
 
-  o = new Fl_Button(0,0, 20, 20, "sawtooth");
+  o = new Fl_Button(0, 0, 20, 20, "sawtooth");
   o->tooltip("Set vibrator waveform to sawtooth");
   o->type(102);
   o->selection_color((Fl_Color)1);
@@ -277,13 +284,9 @@ Fl_Group* makeVibControls(int x, int y, int width, int height)
 
   h->add(buts);
 
-  o = new Fl_Toggle_Button (0,0, 100,20, "constant energy");
-  o->tooltip("Turning on constant energy will cause the vibrator to have less amplitude at higher frequencies.  Turning it off makes it easier to find antinodes at higher frequencies.");
-  h->add(o);
+  h->end();
 
   widgetPacker->add(h);
-
-
 
   Fl_Group *pack3 = makeCoarseFineControl(winWidth,coarsefineHeight,"Vib. Freq.", 
 					  sliderVibFreqCallback, inputVibFreqCallback);
