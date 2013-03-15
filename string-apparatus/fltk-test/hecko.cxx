@@ -12,6 +12,7 @@
 #include <GL/glew.h>
 #endif
 #include "ssg.h"
+#include "glm/glm.hpp"
 #include "Camera.h"
 using namespace glm;
 
@@ -27,13 +28,13 @@ class MyWindow : public Fl_Gl_Window {
   Camera     camera;
 public:
   MyWindow ( int x, int y , int w, int h, const char *L );
-  //    : Fl_Gl_Window ( x, y, w, h, L ) {
   void init();
 };
 
 MyWindow::MyWindow ( int x, int y , int w, int h, const char *L )
     : Fl_Gl_Window ( x, y, w, h, L ) 
 {
+  //  init(); XXX not here dude
   end();
 }
 
@@ -93,12 +94,22 @@ MyWindow::init()
 
 void MyWindow::draw() {
   if (!valid()) { 
-    init();
+    std::cout << "not valid!!!!" << std::endl;
+    init(); // XXX not on reshape, just once please. in constructor?
     camera.setupPerspective( w(), h() );
   }
   // draw
   //  std::cout << "draw" << std::endl;
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+  static int frame = 0;
+  Instance *mover = dynamic_cast<Instance *>(root);
+  if ( mover ) {
+    mover->setMatrix ( rotate(mat4(), float(frame++/40), vec3(0,1,0)) );
+    mover = dynamic_cast<Instance*>(mover->getChild(1));
+    if ( mover ) {
+      mover->setMatrix ( rotate(mat4(), float(frame++/15), vec3(1,0,0)) );
+    }
+  }
   camera.draw(root);
   draw_children();
 }
@@ -316,6 +327,15 @@ Fl_Group* makeStringControls(int x, int y, int width, int height)
   return widgetPacker;
 }
 
+Fl_Pack *makeApparatusControls ( int winWidth, int winHeight, int offsetWidgets )
+{
+  Fl_Pack *packer = new Fl_Pack( 0, offsetWidgets, winWidth, winHeight - offsetWidgets );
+  packer->add(makeStringControls(0,offsetWidgets,winWidth/2,winHeight/2-offsetWidgets));
+  packer->add(makeVibControls(0,offsetWidgets,winWidth/2,winHeight/2-offsetWidgets));
+  packer->add ( new Fl_Window ( winWidth/2, winHeight/2 ) ); // ?????
+  packer->end();
+  return packer;
+}
 
 int 
 main(int argc, char **argv) {
@@ -332,16 +352,10 @@ main(int argc, char **argv) {
   // gets some animation going
   Fl::add_idle(idle,mywindow);
 
-  // pack some controls
+  // add some controls
+  Fl_Pack *bottomWindow = makeApparatusControls ( winWidth, winHeight, offsetWidgets );
+  window->add ( bottomWindow );
 
-  Fl_Pack *bottomWindow = new Fl_Pack( 0, offsetWidgets, winWidth, winHeight - offsetWidgets );
-  bottomWindow->add(makeStringControls(0,offsetWidgets,winWidth/2,winHeight/2-offsetWidgets));
-  bottomWindow->add(makeVibControls(0,offsetWidgets,winWidth/2,winHeight/2-offsetWidgets));
-  bottomWindow->add ( new Fl_Window ( winWidth/2, winHeight/2 ) ); // ?????
-  bottomWindow->end();
-
- 
- window->add ( bottomWindow );
   window->end();
   window->show(argc, argv);
   return Fl::run();
