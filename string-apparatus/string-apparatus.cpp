@@ -593,11 +593,22 @@ init (int argc, char **argv)
 {
   
   // XXX this should pull it apart so we can move things
-#if 0
-  prim = new ObjFilePrimitive ( "objfiles/string-apparatus.obj" );
-#else
-  prim = new ObjFilePrimitive ( "objfiles/string-scene.obj" );
-#endif
+  if ( argc == 2 ) {
+    int choice = atoi ( argv[1] );
+    switch (choice) {
+    case 1:  
+      prim = new ObjFilePrimitive ( "objfiles/string-apparatus.obj" );
+      break;
+    case 2:
+      prim = new ObjFilePrimitive ( "objfiles/string-scene.obj" );
+      break;
+    default:
+      prim = new ObjFilePrimitive ( "objfiles/string-apparatus.obj" );
+      break;
+    }
+  } else {
+      prim = new ObjFilePrimitive ( "objfiles/string-apparatus.obj" );
+  }
 
   // create a root Instance to contain this primitive
   Instance *instance = new Instance();
