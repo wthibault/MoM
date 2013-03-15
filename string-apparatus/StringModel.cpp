@@ -51,12 +51,6 @@ StringModel::updateElement1 ( int i )
 void
 swap3 ( double * &a, double * &b, double * &c )
 {
-  // double *tmp = c;
-  // b = a;
-  // a = tmp;
-  // tmp = c;
-  // c = a;
-  // a = tmp;
   double *tmp = c;
   c = b;
   b = a;

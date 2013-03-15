@@ -27,7 +27,8 @@ Trackball trackball(320,240,240);
 
 //const char *shader = "DepthMap";
 //const char *shader = "ConstantShading";
-const char *shader = "BumpMappedTexturedPhongShading";
+//const char *shader = "BumpMappedTexturedPhongShading";
+const char *shader = "PhongShading";
 
 StringModel *theString;
 RtAudio dac;
@@ -326,8 +327,16 @@ public:
     for ( int i = 0; i < nFreqBins; i++ ) {
       float x,y,z;
       x = i * deltaX;
+
+      //#define FFT_AMP_IN_DECIBELS
+#ifdef FFT_AMP_IN_DECIBELS
       //      y = 20*log10(max(1e-4,fabs(theString_->fftwOut[i][0])));
+      y = 20*log10(theString_->fftwOut[i][0]);
+      y += 50;
+#else
       y = abs(theString_->fftwOut[i][0]);
+#endif
+
       z = 0;
       points_.push_back( glm::vec3 ( x,0,z ) );
       points_.push_back( glm::vec3 ( x,y,z ) );
@@ -363,10 +372,10 @@ public:
     
     glBindVertexArray(0);
     
-    glDisable ( GL_DEPTH_TEST );
+    //    glDisable ( GL_DEPTH_TEST );
     glLineWidth(2.0);
     Primitive::draw ( mv, proj, mat );
-    glEnable ( GL_DEPTH_TEST );
+    //    glEnable ( GL_DEPTH_TEST );
 
     //    printParams();
   }
@@ -584,15 +593,19 @@ init (int argc, char **argv)
 {
   
   // XXX this should pull it apart so we can move things
-  //  prim = new ObjFilePrimitive ( "objfiles/string-apparatus.obj" );
+#if 0
+  prim = new ObjFilePrimitive ( "objfiles/string-apparatus.obj" );
+#else
   prim = new ObjFilePrimitive ( "objfiles/string-scene.obj" );
+#endif
+
   // create a root Instance to contain this primitive
   Instance *instance = new Instance();
   instance->setMatrix ( mat4() );
   instance->addChild ( prim );
 
   // the lights are global for all objects in the scene
-  RenderingEnvironment::getInstance().lightPosition = vec4 ( 0,0,10,1 );
+  RenderingEnvironment::getInstance().lightPosition = vec4 ( 5,5,10,1 );
   RenderingEnvironment::getInstance().lightColor = vec4 ( 1,1,1,1 );
   // gravity center is in world coords, used by all ParticleSystem instances
   ParticleSystem::gravityCenter = vec3 ( 0,-1.9,0 );
@@ -601,7 +614,7 @@ init (int argc, char **argv)
   Material *mat = new Material;
   mat->ambient = vec4 ( 0.1, 0.1, 0.2, 1.0 );
   mat->diffuse = vec4 ( 0.5, 0.5, 0.1, 1.0 );
-  mat->specular = vec4 ( 1.0, 1.0, 1.0, 1.0 );
+  mat->specular = vec4 ( 0.1, 0.1, 0.1, 1.0 );
   mat->shininess = 133.0;
 
   if (argc >= 2 )
@@ -609,7 +622,7 @@ init (int argc, char **argv)
   else
     mat->program = mat->loadShaders ( shader );
 
-  // attach the material to the primitive
+  // attach the material to the background object
   //  instance->setMaterial ( mat );
 
   // set the instance as the scene root
@@ -682,7 +695,9 @@ init (int argc, char **argv)
   // OMG this should be in a texture.
   float opacityValues[256];
   initOpacityValues ( opacityValues, 256 );
+  glUseProgram ( histoMat->program );
   glUniform1fv(glGetUniformLocation(histoMat->program,"bins"), 256, opacityValues);
+  glUseProgram(0);
 
 #else
   StringModelPrimitive *smp = new StringModelPrimitive ( theString );
@@ -693,12 +708,14 @@ init (int argc, char **argv)
   FFTPrimitive *fft = new FFTPrimitive ( theString );
   Instance *fftTransform = new Instance;
   fftTransform->addChild ( fft );
-  fftTransform->setMatrix ( glm::scale ( glm::translate ( glm::mat4(), glm::vec3 (-1.5,-1.5,0.5) ),
-					 glm::vec3(2,1/128.0,1) ) );
+  fftTransform->setMatrix ( glm::scale ( glm::translate ( glm::mat4(), 
+							  glm::vec3 (-1.25, 0.1, 0.0) ),
+					 glm::vec3(0.75, 1.0/128.0, 1.0) ) );
   instance->addChild ( fftTransform );
 
   Material *fftmat = new Material;
-  fftmat->ambient = vec4 ( 1,1,1, 1.0 );
+  //  fftmat->ambient = vec4 ( 1,1,1, 1.0 );
+  fftmat->ambient = vec4 ( 0,0,0, 1.0 );
   fftmat->diffuse = vec4 ( 0,0,0, 1.0 );
   fftmat->specular = vec4 ( 0,0,0, 1.0 );
   fftmat->shininess = 0.0;
