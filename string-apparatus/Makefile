@@ -64,6 +64,8 @@ SSG_INCS = $(INC_DIR)/ssg.h \
 all : 	string-apparatus
 
 string-apparatus : string-apparatus.cpp \
+		StringModelPrimitive.h \
+		FFTPrimitive.h \
 		StringModel.o \
 		ui.o \
 		$(SSG_INCS) \

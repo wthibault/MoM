@@ -35,6 +35,7 @@ MyWindow::MyWindow ( int x, int y , int w, int h, const char *L )
     : Fl_Gl_Window ( x, y, w, h, L ) 
 {
   //  init(); XXX not here dude
+  mode ( FL_RGB8 | FL_DOUBLE | FL_ALPHA | FL_DEPTH | FL_MULTISAMPLE );
   end();
 }
 
@@ -78,7 +79,8 @@ MyWindow::init()
   mat->diffuse = vec4 ( 0.5, 0.5, 0.1, 1.0 );
   mat->specular = vec4 ( 1.0, 1.0, 1.0, 1.0 );
   mat->shininess = 133.0;
-  mat->program = mat->loadShaders ( "PhongShading" );
+  //  mat->program = mat->loadShaders ( "PhongShading" );
+  mat->program = mat->loadShaders ( "DepthMap" );
 
   // attach the material to the primitive
   scene->setMaterial ( mat );
@@ -104,12 +106,13 @@ void MyWindow::draw() {
   static int frame = 0;
   Instance *mover = dynamic_cast<Instance *>(root);
   if ( mover ) {
-    mover->setMatrix ( rotate(mat4(), float(frame++/40), vec3(0,1,0)) );
+    mover->setMatrix ( rotate(mat4(), float(frame/40), vec3(0,1,0)) );
     mover = dynamic_cast<Instance*>(mover->getChild(1));
     if ( mover ) {
       mover->setMatrix ( rotate(mat4(), float(frame++/15), vec3(1,0,0)) );
     }
   }
+  camera.setDistance ( 1+abs(sin(float(frame/10))) );
   camera.draw(root);
   draw_children();
 }
