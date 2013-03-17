@@ -1,6 +1,9 @@
 #include "gui.h"
 #include <algorithm>
+#include "StringModel.h"
 using namespace std;
+
+extern StringModel *theString;
 
 float 
 getFloatValue ( void *input )
@@ -12,7 +15,7 @@ void
 setFloatValue ( void* input, float sliderValue ) 
 {
   char str[100];
-  sprintf(str, "%f", sliderValue);
+  sprintf(str, "%8.5f", sliderValue);
   ((Fl_Float_Input*)input)->value ( str );
 }
 
@@ -39,12 +42,16 @@ static void sliderTensionCallback(Fl_Widget* o, void* input)
 {
   static float lastFine;
   handleCoarseFine ( o, input, 1.0, lastFine );
+  float f = getFloatValue ( input );
+  theString->Ktension = double(f);
 }
 
 static void sliderDampingCallback(Fl_Widget* o, void* input) 
 {
   static float lastFine;
   handleCoarseFine ( o, input, 1.0, lastFine );
+  float f = getFloatValue ( input );
+  theString->Kdamping = double(f);
 
 }
 
@@ -52,16 +59,23 @@ static void sliderVibFreqCallback(Fl_Widget* o, void* input)
 {
   static float lastFine;
   handleCoarseFine ( o, input, 22100.0, lastFine );
+  float f = getFloatValue ( input );
+  theString->vibratorFreq = double(f);
+
 }
 
 static void sliderVibAmpCallback(Fl_Widget* o, void* input) 
 {
   static float lastFine;
-  handleCoarseFine ( o, input, 5.0, lastFine );
+  handleCoarseFine ( o, input, 0.005, lastFine );
+  float f = getFloatValue ( input );
+  theString->vibratorAmplitude = double(f);
 }
 
 static void inputTensionCallback ( Fl_Widget* o, void *theFloat )
 {
+  float f = getFloatValue ( o );
+  theString->Ktension = double(f);
 }
 
 static void inputDampingCallback ( Fl_Widget* o, void *theFloat )
@@ -80,21 +94,23 @@ static void inputVibAmpCallback ( Fl_Widget* o, void *theFloat )
 Fl_Group *
 makeCoarseFineControl ( int w, int h, const char *label, Fl_Callback *fSlider, Fl_Callback *fInput )
 {
-  int horizMargin = 50;
+  int horizMargin = 20;
   int horizOffset = w/5;
   int horizRemain = w - horizOffset;
   int horizRemainEnd = w - horizMargin;
   int inputHeight = 20;
+  int inputWidth = 150;
 
   Fl_Group *group = new Fl_Group ( 0,0, w, h, NULL );
 
 
-  Fl_Float_Input *input = new Fl_Float_Input ( horizMargin,0, horizOffset-horizMargin, inputHeight, label );
+  Fl_Float_Input *input = new Fl_Float_Input ( horizMargin,0, horizOffset, inputHeight, label );
+  //  Fl_Float_Input *input = new Fl_Float_Input ( horizMargin,0, inputWidth, inputHeight, label );
   input->labelsize(10);
   input->callback ( fInput );
   group->add(input);
 
-  Fl_Pack *sliderPack = new Fl_Pack ( horizOffset, 0, horizRemain,h );
+  Fl_Pack *sliderPack = new Fl_Pack ( horizOffset+horizMargin, 0, horizRemain,h );
   Fl_Hor_Nice_Slider *coarseSlider = new Fl_Hor_Nice_Slider( 0,0, horizRemainEnd, 2*h/3, "coarse" );
   coarseSlider->color ( FL_GRAY, FL_DARK_YELLOW );
   coarseSlider->callback ( fSlider, input );
