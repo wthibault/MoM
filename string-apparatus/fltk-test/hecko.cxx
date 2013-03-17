@@ -34,7 +34,6 @@ public:
 MyWindow::MyWindow ( int x, int y , int w, int h, const char *L )
     : Fl_Gl_Window ( x, y, w, h, L ) 
 {
-  //  init(); XXX not here dude
   mode ( FL_RGB8 | FL_DOUBLE | FL_ALPHA | FL_DEPTH | FL_MULTISAMPLE );
   end();
 }
@@ -43,7 +42,6 @@ void
 MyWindow::init()
 {
 
-  CheckError();
 #ifndef __APPLE__
     glewExperimental = GL_TRUE;
     GLenum err = glewInit();
@@ -53,7 +51,7 @@ MyWindow::init()
     }
 #endif
 
-    //  create a primitive.  if supplied on command line, read a .obj wavefront file
+  //  create a primitive.  if supplied on command line, read a .obj wavefront file
   Primitive *prim = new Triangle;
 
   // create the graph
@@ -79,8 +77,8 @@ MyWindow::init()
   mat->diffuse = vec4 ( 0.5, 0.5, 0.1, 1.0 );
   mat->specular = vec4 ( 1.0, 1.0, 1.0, 1.0 );
   mat->shininess = 133.0;
-  //  mat->program = mat->loadShaders ( "PhongShading" );
-  mat->program = mat->loadShaders ( "DepthMap" );
+  mat->program = mat->loadShaders ( "PhongShading" );
+  //mat->program = mat->loadShaders ( "DepthMap" );
 
   // attach the material to the primitive
   scene->setMaterial ( mat );
@@ -89,7 +87,7 @@ MyWindow::init()
   root = scene;
 
   // setup projection using w() and h()
-  glClearColor (0.0, 0.0, 0.0, 1.0);
+  glClearColor (1,1,1, 1.0);
   glEnable(GL_DEPTH_TEST);
   CheckError();
 }
@@ -106,19 +104,19 @@ void MyWindow::draw() {
   static int frame = 0;
   Instance *mover = dynamic_cast<Instance *>(root);
   if ( mover ) {
-    mover->setMatrix ( rotate(mat4(), float(frame/40), vec3(0,1,0)) );
+    mover->setMatrix ( rotate(mat4(), float(frame), vec3(0,1,0)) );
     mover = dynamic_cast<Instance*>(mover->getChild(1));
     if ( mover ) {
-      mover->setMatrix ( rotate(mat4(), float(frame++/15), vec3(1,0,0)) );
+      mover->setMatrix ( rotate(mat4(), float(frame++), vec3(1,0,0)) );
     }
   }
-  camera.setDistance ( 1+abs(sin(float(frame/10))) );
+  camera.setDistance ( 3 );//+abs(sin(float(frame/10))) );
   camera.draw(root);
   draw_children();
 }
 
 int MyWindow::handle ( int event ) {
-  std::cout << "handle " << event << std::endl;
+  //  std::cout << "handle " << event << std::endl;
   switch ( event ) {
   case FL_PUSH: // Fl::event_x() and Fl::event_y() 
     return 1;
@@ -141,8 +139,9 @@ int MyWindow::handle ( int event ) {
     return Fl_Gl_Window::handle(event);
   }
 }
-void idle (void *data) {
-  //  std::cout << "idle\n";
+
+void 
+idle (void *data) {
   Fl_Widget *w = static_cast<Fl_Widget*>(data);
   if (w)
     w->redraw();
@@ -313,7 +312,8 @@ makeVibControls(int x, int y, int width, int height)
   return widgetPacker;
 }
 
-Fl_Group* makeStringControls(int x, int y, int width, int height)
+Fl_Group* 
+makeStringControls(int x, int y, int width, int height)
 {
   //  Fl_Pack *widgetPacker = new Fl_Pack( 0, offsetWidgets, winWidth, winHeight - offsetWidgets );
   Fl_Pack *widgetPacker = new Fl_Pack( x,y,width,height);
@@ -330,7 +330,8 @@ Fl_Group* makeStringControls(int x, int y, int width, int height)
   return widgetPacker;
 }
 
-Fl_Pack *makeApparatusControls ( int winWidth, int winHeight, int offsetWidgets )
+Fl_Pack* 
+makeApparatusControls ( int winWidth, int winHeight, int offsetWidgets )
 {
   Fl_Pack *packer = new Fl_Pack( 0, offsetWidgets, winWidth, winHeight - offsetWidgets );
   packer->add(makeStringControls(0,offsetWidgets,winWidth/2,winHeight/2-offsetWidgets));

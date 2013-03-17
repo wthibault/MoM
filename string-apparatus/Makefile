@@ -61,29 +61,58 @@ SSG_INCS = $(INC_DIR)/ssg.h \
 	$(INC_DIR)/Trackball.h 
 
 
-all : 	string-apparatus
+###### 
+FLTKCONFIG   = /usr/local/bin/fltk-config
+CXX          = $(shell $(FLTKCONFIG) --cxx)
+#CXXFLAGS     = $(shell $(FLTKCONFIG) --cxxflags) -g -Wall -I. -I$(SSG_DIR)/include
+INCLUDES    += $(shell $(FLTKCONFIG) --cxxflags)
+LINKFLTK     = $(shell $(FLTKCONFIG) --ldstaticflags)
+LINKFLTK_GL  = $(shell $(FLTKCONFIG) --use-gl --ldstaticflags)
+LINKFLTK_IMG = $(shell $(FLTKCONFIG) --use-images --ldstaticflags)
+LINKFLTK_ALL = $(shell $(FLTKCONFIG) --use-images --use-gl --ldstaticflags) 
+ifeq "$(MACHINE)" "i686-apple-darwin11"
+LINKFLTK_ALL = $(shell $(FLTKCONFIG) --use-images --use-gl --ldstaticflags) \
+	       $(SSG_DIR)/src/ssg.a -framework OpenGL
+endif
 
-string-apparatus : string-apparatus.cpp \
+#.SUFFIXES: .cxx .h .fl .o $(EXEEXT)
+
+# HOW TO COMPILE
+#.cxx.o:
+#	@echo "*** Compile $<..."
+#	$(CXX) -I.. $(CXXFLAGS) -c $< -o $@
+
+## HOW TO LINK
+#.o$(EXEEXT):
+#	@echo "*** Linking $@..."
+#	$(CXX) $< $(LINKFLTK_ALL) -o $@
+
+##############
+all : 	string-apparatus $(SSG_DATA)/objfiles/string-apparatus.obj $(SSG_DATA)/objfiles/string-scene.obj
+
+string-apparatus : main.cpp \
 		StringModelPrimitive.h \
 		FFTPrimitive.h \
 		StringModel.o \
-		ui.o \
+		gui.o \
 		$(SSG_INCS) \
 		$(LIB_DIR)/ssg.a \
 		$(SSG_DATA)/objfiles/string-apparatus.obj 
-	g++ $(OPTS) -o string-apparatus $(INCLUDES) string-apparatus.cpp \
+	g++ $(OPTS) -o string-apparatus $(INCLUDES) \
+		main.cpp \
 		StringModel.o \
-		ui.o \
+		gui.o \
 		$(LIB_DIR)/ssg.a \
 		-I$(RTAUDIO_DIR)  \
-		$(LIBS)
+		$(LIBS) \
+		$(LINKFLTK_ALL)
 
 
 StringModel.o : StringModel.h StringModel.cpp
 	g++ $(OPTS) -c StringModel.cpp $(INCLUDES)
 
-ui.o : ui.h ui.cpp 
-	g++ $(OPTS) -c ui.cpp $(INCLUDES)
+gui.o : gui.h gui.cpp 
+	g++ $(OPTS) -c gui.cpp $(INCLUDES)
 
 $(SSG_DATA)/objfiles/string-apparatus.obj : blender/string-apparatus.obj
 	cp blender/string-apparatus.obj $(SSG_DATA)/objfiles
