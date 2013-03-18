@@ -232,7 +232,8 @@ MyWindow::init()
 
 
   Primitive *prim;
-  prim = new ObjFilePrimitive ( "objfiles/string-apparatus.obj" );
+  //  prim = new ObjFilePrimitive ( "objfiles/string-apparatus.obj" );
+  prim = new ObjFilePrimitive ( "objfiles/string-scene.obj" );
 
   // create a root Instance to contain this primitive
   Instance *instance = new Instance();
@@ -374,10 +375,10 @@ int MyWindow::handle ( int event ) {
   std::cout << "handle " << event << ',' << Fl::event_x() << ',' << Fl::event_y() << std::endl;
   switch ( event ) {
   case FL_PUSH: // Fl::event_x() and Fl::event_y() 
-    camera.startMouse ( Fl::event_x(), Fl::event_y() );
+    camera.startMouse ( Fl::event_x(), h()-Fl::event_y() );
     return 1;
   case FL_DRAG:
-    camera.dragMouse ( Fl::event_x(), Fl::event_y() );
+    camera.dragMouse ( Fl::event_x(), h()-Fl::event_y() );
     return 1;
   case FL_RELEASE:
     return 1;
@@ -425,7 +426,9 @@ main(int argc, char** argv)
   Fl::add_idle(idle,mywindow);
 
   // add some controls
-  Fl_Pack *bottomWindow = makeApparatusControls ( winWidth, winHeight, offsetWidgets, coarsefineHeight );
+  Fl_Pack *bottomWindow = makeApparatusControls ( winWidth, winHeight, 
+						  offsetWidgets + 20, 
+						  coarsefineHeight );
   window->add ( bottomWindow );
 
   window->end();

@@ -20,54 +20,105 @@ setFloatValue ( void* input, float sliderValue )
 }
 
 void 
-handleCoarseFine (Fl_Widget* o, void* input, float maxValue, float& lastFine) 
+handleCoarse (Fl_Widget* o, void* input, float maxValue, float& lastFine) 
 {
   Fl_Valuator *slider = ((Fl_Valuator*)o);
   float sliderValue = slider->value();
   float inputValue = getFloatValue ( input );
   float value;
-  if ( strcmp ( slider->label(), "coarse" ) == 0 ) {
-    value = sliderValue * maxValue;
-  } else {
-    float incr = (sliderValue - lastFine) * 0.001;
-    value = inputValue + incr;
-    lastFine = sliderValue;
-  }
-
+  value = sliderValue * maxValue;
   value = max ( 0.0f, min ( maxValue, value ) );
   setFloatValue ( input, value );
 }
 
-static void sliderTensionCallback(Fl_Widget* o, void* input) 
+void 
+handleFine (Fl_Widget* o, void* input, float maxValue, float& lastFine) 
+{
+  Fl_Valuator *slider = ((Fl_Valuator*)o);
+  float sliderValue = slider->value();
+  float inputValue = getFloatValue ( input );
+  float value;
+  float incr = (sliderValue - lastFine) * 0.001;
+  value = inputValue + incr;
+  lastFine = sliderValue;
+  value = max ( 0.0f, min ( maxValue, value ) );
+  setFloatValue ( input, value );
+}
+
+//////////////////////
+// callbacks
+/////////////////////
+
+static void sliderTensionCoarseCallback(Fl_Widget* o, void* input) 
 {
   static float lastFine;
-  handleCoarseFine ( o, input, 1.0, lastFine );
+  handleCoarse ( o, input, 1.0, lastFine );
   float f = getFloatValue ( input );
   theString->Ktension = double(f);
 }
 
-static void sliderDampingCallback(Fl_Widget* o, void* input) 
+static void sliderTensionFineCallback(Fl_Widget* o, void* input) 
 {
   static float lastFine;
-  handleCoarseFine ( o, input, 1.0, lastFine );
+  handleFine ( o, input, 1.0, lastFine );
+  float f = getFloatValue ( input );
+  theString->Ktension = double(f);
+}
+
+
+
+static void sliderDampingCoarseCallback(Fl_Widget* o, void* input) 
+{
+  static float lastFine;
+  handleCoarse ( o, input, 1.0, lastFine );
   float f = getFloatValue ( input );
   theString->Kdamping = double(f);
 
 }
 
-static void sliderVibFreqCallback(Fl_Widget* o, void* input) 
+static void sliderDampingFineCallback(Fl_Widget* o, void* input) 
 {
   static float lastFine;
-  handleCoarseFine ( o, input, 22100.0, lastFine );
+  handleFine ( o, input, 1.0, lastFine );
+  float f = getFloatValue ( input );
+  theString->Kdamping = double(f);
+
+}
+
+
+
+static void sliderVibFreqCoarseCallback(Fl_Widget* o, void* input) 
+{
+  static float lastFine;
+  handleCoarse ( o, input, 22100.0, lastFine );
   float f = getFloatValue ( input );
   theString->vibratorFreq = double(f);
 
 }
 
-static void sliderVibAmpCallback(Fl_Widget* o, void* input) 
+static void sliderVibFreqFineCallback(Fl_Widget* o, void* input) 
 {
   static float lastFine;
-  handleCoarseFine ( o, input, 0.005, lastFine );
+  handleFine ( o, input, 22100.0, lastFine );
+  float f = getFloatValue ( input );
+  theString->vibratorFreq = double(f);
+
+}
+
+
+
+static void sliderVibAmpCoarseCallback(Fl_Widget* o, void* input) 
+{
+  static float lastFine;
+  handleCoarse ( o, input, 0.005, lastFine );
+  float f = getFloatValue ( input );
+  theString->vibratorAmplitude = double(f);
+}
+
+static void sliderVibAmpFineCallback(Fl_Widget* o, void* input) 
+{
+  static float lastFine;
+  handleFine ( o, input, 0.005, lastFine );
   float f = getFloatValue ( input );
   theString->vibratorAmplitude = double(f);
 }
@@ -90,34 +141,54 @@ static void inputVibAmpCallback ( Fl_Widget* o, void *theFloat )
 {
 }
 
+static void vibOnCallback ( Fl_Widget* o )
+{
+  theString->vibratorPower ( ((Fl_Light_Button*) o)->value() );
+}
+
+static void sineButtonCallback ( Fl_Widget *o )
+{
+}
+
+static void sawtoothButtonCallback ( Fl_Widget *o )
+{
+}
+
+
+/////////////////////////////////////////////////////////////
 
 Fl_Group *
-makeCoarseFineControl ( int w, int h, const char *label, Fl_Callback *fSlider, Fl_Callback *fInput )
+makeCoarseFineControl ( int w, int h, const char *label, 
+			Fl_Callback *fCoarseSlider, 
+			Fl_Callback *fFineSlider,
+			Fl_Callback *fInput )
 {
-  int horizMargin = 20;
-  int horizOffset = w/5;
-  int horizRemain = w - horizOffset;
-  int horizRemainEnd = w - horizMargin;
   int inputHeight = 20;
-  int inputWidth = 150;
+  int inputWidth = 50;
+  int horizMargin = 30;
+  //  int horizOffset = w/5;
+  int horizRemain = w - inputWidth - 2*horizMargin;
+  int horizRemainEnd = horizRemain - horizMargin;
 
   Fl_Group *group = new Fl_Group ( 0,0, w, h, NULL );
 
 
-  Fl_Float_Input *input = new Fl_Float_Input ( horizMargin,0, horizOffset, inputHeight, label );
+  Fl_Float_Input *input = new Fl_Float_Input ( horizMargin,0, inputWidth, inputHeight, label );
   //  Fl_Float_Input *input = new Fl_Float_Input ( horizMargin,0, inputWidth, inputHeight, label );
   input->labelsize(10);
   input->callback ( fInput );
   group->add(input);
 
-  Fl_Pack *sliderPack = new Fl_Pack ( horizOffset+horizMargin, 0, horizRemain,h );
-  Fl_Hor_Nice_Slider *coarseSlider = new Fl_Hor_Nice_Slider( 0,0, horizRemainEnd, 2*h/3, "coarse" );
+  Fl_Pack *sliderPack = new Fl_Pack ( inputWidth+horizMargin, 0, horizRemain,h );
+  //  Fl_Hor_Nice_Slider *coarseSlider = new Fl_Hor_Nice_Slider( 0,0, horizRemainEnd, 2*h/3, "coarse" );
+  Fl_Hor_Nice_Slider *coarseSlider = new Fl_Hor_Nice_Slider( 0,0, horizRemainEnd, 2*h/3 );
   coarseSlider->color ( FL_GRAY, FL_DARK_YELLOW );
-  coarseSlider->callback ( fSlider, input );
+  coarseSlider->callback ( fCoarseSlider, input );
 
-  Fl_Hor_Nice_Slider *fineSlider =   new Fl_Hor_Nice_Slider( 0,0, horizRemainEnd, h/3, "fine" );
+  //  Fl_Hor_Nice_Slider *fineSlider =   new Fl_Hor_Nice_Slider( 0,0, horizRemainEnd, h/3, "fine" );
+  Fl_Hor_Nice_Slider *fineSlider =   new Fl_Hor_Nice_Slider( 0,0, horizRemainEnd, h/3 );
   fineSlider->color ( FL_GRAY, FL_DARK_YELLOW );
-  fineSlider->callback ( fSlider, input );
+  fineSlider->callback ( fFineSlider, input );
 
   sliderPack->add ( coarseSlider );
   sliderPack->add ( fineSlider );
@@ -140,7 +211,8 @@ makeVibControls(int x, int y, int width, int height, int coarsefineHeight)
   //  h->type( Fl_Pack::HORIZONTAL );
   Fl_Group *h = new Fl_Group ( 0,0,width, coarsefineHeight );
   
-  Fl_Light_Button *onbut = new Fl_Light_Button ( 0,0, 140, 20, "Vibrator on" );
+  Fl_Light_Button *onbut = new Fl_Light_Button ( 0,0, 140, 20, "Vibrator on");
+  onbut->callback ( vibOnCallback );
   h->add ( onbut );
 
   Fl_Button *o = new Fl_Light_Button (0,20, 140,20, "constant energy");
@@ -156,6 +228,7 @@ makeVibControls(int x, int y, int width, int height, int coarsefineHeight)
   o->selection_color((Fl_Color)1);
   o->align(Fl_Align(FL_ALIGN_RIGHT));
   o->value(1);
+  o->callback(sineButtonCallback);
   buts->add(o);
 
   o = new Fl_Button(0, 0, 20, 20, "sawtooth");
@@ -163,6 +236,7 @@ makeVibControls(int x, int y, int width, int height, int coarsefineHeight)
   o->type(102);
   o->selection_color((Fl_Color)1);
   o->align(Fl_Align(FL_ALIGN_RIGHT));
+  o->callback(sawtoothButtonCallback);
   buts->add(o);
   buts->end();
 
@@ -173,10 +247,14 @@ makeVibControls(int x, int y, int width, int height, int coarsefineHeight)
   widgetPacker->add(h);
 
   Fl_Group *pack3 = makeCoarseFineControl(width,coarsefineHeight,"Vib. Freq.", 
-					  sliderVibFreqCallback, inputVibFreqCallback);
+					  sliderVibFreqCoarseCallback, 
+					  sliderVibFreqFineCallback, 
+					  inputVibFreqCallback);
   widgetPacker->add(pack3);
   Fl_Group *pack4 = makeCoarseFineControl(width,coarsefineHeight,"Vib. Amp.", 
-					  sliderVibAmpCallback, inputVibAmpCallback );
+					  sliderVibAmpCoarseCallback, 
+					  sliderVibAmpFineCallback, 
+					  inputVibAmpCallback );
   widgetPacker->add(pack4);
   widgetPacker->end();
 
@@ -191,10 +269,14 @@ makeStringControls(int x, int y, int width, int height, int coarsefineHeight )
   widgetPacker->spacing(10);
 
   Fl_Group *pack1 = makeCoarseFineControl(width,coarsefineHeight,"Tension", 
-					  sliderTensionCallback, inputTensionCallback );
+					  sliderTensionCoarseCallback, 
+					  sliderTensionFineCallback, 
+					  inputTensionCallback );
   widgetPacker->add(pack1);
   Fl_Group *pack2 = makeCoarseFineControl(width,coarsefineHeight,"Damping", 
-					  sliderDampingCallback, inputDampingCallback );
+					  sliderDampingCoarseCallback, 
+					  sliderDampingFineCallback, 
+					  inputDampingCallback );
   widgetPacker->add(pack2);
   widgetPacker->end();
 

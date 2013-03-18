@@ -382,6 +382,11 @@ StringModel::toggleVibrator() {
   vibratorOn = !vibratorOn;
 }
 
+void 
+StringModel::vibratorPower(bool on) {
+  vibratorOn = on;
+}
+
 inline double 
 StringModel::linearToDecibels ( double amp ) 
 {

@@ -143,6 +143,7 @@ struct StringModel {
   void pluck();
   void pluckvel();
   void toggleVibrator();
+  void vibratorPower ( bool on );
   inline double linearToDecibels ( double amp );
   inline double decibelsToLinear ( double db );
   inline void clip ( double *s );
