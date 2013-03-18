@@ -372,7 +372,7 @@ void MyWindow::draw() {
 }
 
 int MyWindow::handle ( int event ) {
-  std::cout << "handle " << event << ',' << Fl::event_x() << ',' << Fl::event_y() << std::endl;
+  //  std::cout << "handle " << event << ',' << Fl::event_x() << ',' << Fl::event_y() << std::endl;
   switch ( event ) {
   case FL_PUSH: // Fl::event_x() and Fl::event_y() 
     camera.startMouse ( Fl::event_x(), h()-Fl::event_y() );
@@ -388,7 +388,7 @@ int MyWindow::handle ( int event ) {
   case FL_KEYBOARD:
     // key in Fl::event(), ascii in Fl::event_text()
     // return 1 if understand/use the event
-    std::cout << "FL_KEYBOARD " << Fl::event_key() << std::endl;
+    //    std::cout << "FL_KEYBOARD " << Fl::event_key() << std::endl;
     keyboard ( Fl::event_key(), Fl::event_x(), Fl::event_y() );
     return 1;
   case FL_SHORTCUT:

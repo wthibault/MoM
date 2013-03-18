@@ -38,7 +38,7 @@ handleFine (Fl_Widget* o, void* input, float maxValue, float& lastFine)
   float sliderValue = slider->value();
   float inputValue = getFloatValue ( input );
   float value;
-  float incr = (sliderValue - lastFine) * 0.001;
+  float incr = (sliderValue - lastFine) * 0.01;
   value = inputValue + incr;
   lastFine = sliderValue;
   value = max ( 0.0f, min ( maxValue, value ) );
@@ -90,7 +90,7 @@ static void sliderDampingFineCallback(Fl_Widget* o, void* input)
 static void sliderVibFreqCoarseCallback(Fl_Widget* o, void* input) 
 {
   static float lastFine;
-  handleCoarse ( o, input, 22100.0, lastFine );
+  handleCoarse ( o, input, 1000.0, lastFine );
   float f = getFloatValue ( input );
   theString->vibratorFreq = double(f);
 
@@ -99,7 +99,7 @@ static void sliderVibFreqCoarseCallback(Fl_Widget* o, void* input)
 static void sliderVibFreqFineCallback(Fl_Widget* o, void* input) 
 {
   static float lastFine;
-  handleFine ( o, input, 22100.0, lastFine );
+  handleFine ( o, input, 1000.0, lastFine );
   float f = getFloatValue ( input );
   theString->vibratorFreq = double(f);
 
@@ -131,14 +131,20 @@ static void inputTensionCallback ( Fl_Widget* o, void *theFloat )
 
 static void inputDampingCallback ( Fl_Widget* o, void *theFloat )
 {
+  float f = getFloatValue ( o );
+  theString->Kdamping = double(f);
 }
 
 static void inputVibFreqCallback ( Fl_Widget* o, void *theFloat )
 {
+  float f = getFloatValue ( o );
+  theString->vibratorFreq = double(f);
 }
 
 static void inputVibAmpCallback ( Fl_Widget* o, void *theFloat )
 {
+  float f = getFloatValue ( o );
+  theString->vibratorAmplitude = double(f);
 }
 
 static void vibOnCallback ( Fl_Widget* o )
