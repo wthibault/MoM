@@ -29,23 +29,45 @@ using namespace glm;
 // GLOBALS
 //
 
+// scene graph 
 ModelNode *root;          
-Primitive *prim;          
-Trackball trackball(320,240,240);
+
+// physics model of string
 StringModel *theString;
+
+// audio output handle
 RtAudio dac;
 
-//const char *shader = "DepthMap";
-//const char *shader = "ConstantShading";
-//const char *shader = "BumpMappedTexturedPhongShading";
 const char *shader = "PhongShading";
 
-int width, height; // window size (glut)
-
+// window and widget constants
 const int winWidth = 800;
 const int winHeight = 600;
 const int offsetWidgets = winHeight / 2;
 const int coarsefineHeight = (winHeight - offsetWidgets) / 7;
+
+// audio params
+const int sampleRate = 44100;
+unsigned int bufferFrames = 256; // 256 sample frames ~ 5ms 
+//unsigned int bufferFrames = 1024; // 256 sample frames ~ 5ms 
+
+// simulation params
+
+const int simStepsPerSample = 2;
+#ifdef NEW_STRING_MODEL
+double initHangerMass = 10.0; // g
+double initMassDensity = 1.0;  // g/m
+double initDecayTime = 0.5;
+#else
+double initTension = 0.5;
+double initDamping = 0.99993;
+#endif
+double initVibFreq = 50.0;
+double initVibAmp = 1.0;
+
+#ifndef NUM_MASSES
+#define NUM_MASSES 1000
+#endif
 
 ///////////////////////////////////////////////////////////////////////
 
@@ -85,24 +107,32 @@ keyboard (unsigned char key, int x, int y)
   case 'e' : 
     // coarse damping control - up
     //    theString->Kdamping *= upCoarse * dampAdjustment;
+#ifndef NEW_STRING_MODEL
     theString->Kdamping += dampAdjustment;
     theString->Kdamping = fmin ( 1.0, theString->Kdamping );
+#endif
     break;
   case 'E' : 
     // fine damping control - up
     //    theString->Kdamping *= upFine / dampAdjustment;
+#ifndef NEW_STRING_MODEL
     theString->Kdamping += dampAdjustment/10;
     theString->Kdamping = fmin ( 1.0, theString->Kdamping );
+#endif
     break;
   case 'd' : 
     // coarse damping control - down
     //    theString->Kdamping *= downCoarse / dampAdjustment;
+#ifndef NEW_STRING_MODEL
     theString->Kdamping -= dampAdjustment;
+#endif
     break;
   case 'D' : 
     // fine damping control - down
     //    theString->Kdamping *= downFine / dampAdjustment;
+#ifndef NEW_STRING_MODEL
     theString->Kdamping -= dampAdjustment/10;
+#endif
     break;
 
 
@@ -179,26 +209,14 @@ initOpacityValues ( float values[], int size )
   const float EPSILON = 1e-6;
   for ( int i = 0; i < size; i++ ) {
     float x = float(i) / float(size);
-    //    values[i] = min ( 1.0, 1.0 / fmax ( EPSILON, M_PI * sqrt ( 1 - (2*x-1) * (2*x-1) ) ) );
     values[i] = min ( 1.0, 1.0 / (M_PI * sqrt ( 1 - (2*x-1) * (2*x-1) )) );
-    //    std::cout << values[i] << std::endl;
   }
 }
 
-void 
-mouse ( int button, int state, int x, int y )
-{
-  if ( button == GLUT_LEFT_BUTTON && state == GLUT_DOWN ) {
-    trackball.startMouse ( x, height-y );
-  }
-}
 
-void
-motion ( int x, int y ) 
-{
-  trackball.dragMouse(x,height-y);
-}
 /////////////////////////////////////////////////////
+
+
 class MyWindow : public Fl_Gl_Window {
   void draw();
   int handle(int);
@@ -263,7 +281,6 @@ MyWindow::init()
   glEnable(GL_DEPTH_TEST);
   glPointSize(1.0);
   glLineWidth(1.0);
-
   // for transparency
   glEnable ( GL_BLEND );
   glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
@@ -271,13 +288,20 @@ MyWindow::init()
   //  glEnable ( GL_LINE_SMOOTH );
   //  glHint ( GL_LINE_SMOOTH, GL_NICEST );
 
-  // audio params
-  int sampleRate = 44100;
-  unsigned int bufferFrames = 256; // 256 sample frames ~ 5ms 
-  //unsigned int bufferFrames = 1024; // 256 sample frames ~ 5ms 
-
   // the simulation 
-  theString = new StringModel ( NUM_MASSES, 0.01, 0.99999, 2, sampleRate, bufferFrames );
+#ifdef NEW_STRING_MODEL
+  theString = new StringModel ( NUM_MASSES, 
+				initHangerMass * 9.8,
+				initMassDensity, 
+				initDecayTime, 
+				2.0,
+				simStepsPerSample, 
+				sampleRate, 
+				bufferFrames );
+#else
+  theString = new StringModel ( NUM_MASSES, initTension, initDamping,
+				simStepsPerSample, sampleRate, bufferFrames );
+#endif
 
   // the audio
   if ( dac.getDeviceCount() < 1 ) {
@@ -355,23 +379,23 @@ MyWindow::init()
   //  std::cout << "MyWindow::init done" << std::endl;
 }
 
-void MyWindow::draw() {
-  //  std::cout << "MyWindow::draw" << std::endl;
+
+void 
+MyWindow::draw() {
   if (!valid()) { 
     std::cout << "not valid!!!!" << std::endl;
     init(); 
     camera.setupPerspective( w(), h() );
   }
-
-  // draw
   root->update ( 0.033 );
   glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+  camera.setDistance ( 1.0 );
   camera.draw(root);
-
-  //  draw_children();
 }
 
-int MyWindow::handle ( int event ) {
+
+int 
+MyWindow::handle ( int event ) {
   //  std::cout << "handle " << event << ',' << Fl::event_x() << ',' << Fl::event_y() << std::endl;
   switch ( event ) {
   case FL_PUSH: // Fl::event_x() and Fl::event_y() 
@@ -402,7 +426,6 @@ int MyWindow::handle ( int event ) {
 
 void 
 idle (void *data) {
-  //  Fl_Widget *w = static_cast<Fl_Widget*>(data);
   Fl_Gl_Window *w = static_cast<Fl_Gl_Window*>(data);
   if (w)
     w->redraw();
@@ -412,7 +435,6 @@ idle (void *data) {
 int 
 main(int argc, char** argv)
 {
-
   // the enclosing FLTK window
   Fl_Window *window = new Fl_Window(winWidth, winHeight);
 
@@ -430,16 +452,9 @@ main(int argc, char** argv)
 						  offsetWidgets + 20, 
 						  coarsefineHeight );
   window->add ( bottomWindow );
-
   window->end();
-
   window->show(argc, argv);
-
   return Fl::run();
-
-  
-
-  return 0;
 }
 
 

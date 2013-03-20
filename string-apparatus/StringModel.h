@@ -105,7 +105,6 @@ public:
     if ( windowed ) {
       double incr = 1.0 / numFrames;
       for ( int i = 0; i < numFrames; i++ ) {
-	//	*dest++ = windowFunction ( index * incr ) * data[index];
 	*dest++ = windowFunction ( i * incr ) * data[index];
 	index = (index - stride);
 	if (index < 0)
@@ -128,6 +127,88 @@ public:
 
 //////////////////////////////////////////////////////
 
+#ifdef NEW_STRING_MODEL
+
+struct StringModel {
+  StringModel ( int n, 
+		double _Ktension, 
+		double _massDensity,
+		double _decayTime, // in seconds
+		double _length,    // in meters, of string
+		int _stepspersample,
+		int _sampleRate,
+		int _bufferFrames );
+  ~StringModel();
+
+  void setTension ( double T );
+  void setMassDensity ( double mu );
+  void setDecayTime ( double tau );
+
+  void print();
+  void reset();
+  void pluck();
+  void pluckvel();
+  void toggleVibrator();
+  void vibratorPower ( bool on );
+  inline double linearToDecibels ( double amp );
+  inline double decibelsToLinear ( double db );
+  inline void clip ( double *s );
+
+  // for RtAudio
+  static int audioCallback ( void *outputBuffer, 
+			     void *inputBuffer, 
+			     unsigned int nBufferFrames,
+			     double streamTime, 
+			     RtAudioStreamStatus status, 
+			     void *userData );
+
+  inline void updateElement1 ( int i );
+
+  void precomputeConstants();
+
+  void computeSamples ( double *outputBuffer, unsigned int nBufferFrames );
+
+  void analyze(double *buffer, unsigned int nBufferFrames);
+
+  double levelDetect ( double *buffer, unsigned int nFrames );
+  void compress ( double *soundout, unsigned int nBufferFrames );
+
+  int simulationStepsPerSample;
+  int numMasses;
+  double Ktension;
+  double massDensity;
+  double decayTime;
+  double length;
+  int sampleRate;
+  int bufferFrames;
+
+  double c1, c2, c3; // constants for update equation
+
+  double *y;
+  double *yold;
+  double *yolder;
+
+  unsigned int seed;
+  pthread_mutex_t lock;
+
+  bool   vibratorOn;
+  double vibratorFreq;
+  double vibratorAmplitude;
+  double vibratorPhase;
+
+  double compressionThreshold;
+  double compressionRatio;
+
+  fftw_plan     fftwPlan;
+  double       *fftwIn;
+  fftw_complex *fftwOut;
+  int           numFramesToAnalyze;
+  RingBuffer    ringBuffer;
+
+  Histogram    *histograms;
+};
+
+#else
 
 struct StringModel {
   StringModel ( int n, 
@@ -195,3 +276,4 @@ struct StringModel {
   Histogram    *histograms;
 };
 
+#endif

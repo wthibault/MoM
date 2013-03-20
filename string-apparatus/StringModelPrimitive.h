@@ -88,7 +88,12 @@ public:
     // temp until HUD
     std::cout << std::endl << std::endl << std::endl;
     printParam ("Ktension    ", theString_->Ktension );
+#ifdef NEW_STRING_MODEL
+    printParam ("massDensity ", theString_->massDensity );
+    printParam ("decayTime   ", theString_->decayTime );
+#else
     printParam ("Kdamping    ", theString_->Kdamping );
+#endif
     printParam ("vib freq.   ", theString_->vibratorFreq );
     printParam ("vib amp.    ", theString_->vibratorAmplitude );
     
@@ -210,7 +215,9 @@ public:
     // temp until HUD
     std::cout << std::endl << std::endl << std::endl;
     printParam ("Ktension    ", theString_->Ktension );
+#ifndef NEW_STRING_MODEL
     printParam ("Kdamping    ", theString_->Kdamping );
+#endif
     printParam ("vib freq.   ", theString_->vibratorFreq );
     printParam ("vib amp.    ", theString_->vibratorAmplitude );
     
