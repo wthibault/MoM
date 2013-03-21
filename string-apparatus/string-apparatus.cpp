@@ -311,7 +311,7 @@ init (int argc, char **argv)
   //unsigned int bufferFrames = 1024; // 256 sample frames ~ 5ms 
 
   // the simulation 
-  theString = new StringModel ( NUM_MASSES, 0.01, 0.99999, 2, sampleRate, bufferFrames );
+  theString = new StringModel ( NUM_MASSES, 0.5, 0.99997, 2, sampleRate, bufferFrames );
 
   // the audio
   if ( dac.getDeviceCount() < 1 ) {

@@ -179,8 +179,10 @@ public:
       indices_.push_back ( 2*i );
       indices_.push_back ( 2*i+1 );
       theString_->histograms[i].clear();
-      theString_->histograms[i].minVal = -1e-6;
-      theString_->histograms[i].maxVal = +1e-6;
+      //      theString_->histograms[i].minVal = -1e-6;
+      //      theString_->histograms[i].maxVal = +1e-6;
+      theString_->histograms[i].minVal = 100;
+      theString_->histograms[i].maxVal = -100;
     }
 
     

@@ -144,12 +144,15 @@ struct StringModel {
   void setMassDensity ( double mu );
   void setDecayTime ( double tau );
 
+  void setVibratorWaveform ( int wave ); // 0 for sine, 1 for saw
+
   void print();
   void reset();
   void pluck();
   void pluckvel();
   void toggleVibrator();
   void vibratorPower ( bool on );
+  double adjustedVibratorAmplitude();
   inline double linearToDecibels ( double amp );
   inline double decibelsToLinear ( double db );
   inline void clip ( double *s );
@@ -192,9 +195,11 @@ struct StringModel {
   pthread_mutex_t lock;
 
   bool   vibratorOn;
+  int    vibratorWaveform; // 0: sine; 1: sawtooth
   double vibratorFreq;
   double vibratorAmplitude;
   double vibratorPhase;
+  bool   vibratorConstantPower;
 
   double compressionThreshold;
   double compressionRatio;

@@ -16,6 +16,9 @@ extern const double initTension;
 extern const double initDamping;
 #endif
 
+const float maxVibAmp = 0.005;
+const float incrFine = 0.1;
+
 const char *floatFormat = "%8.5f";
 
 float 
@@ -51,7 +54,7 @@ handleFine (Fl_Widget* o, void* input, float maxValue, float& lastFine)
   float sliderValue = slider->value();
   float inputValue = getFloatValue ( input );
   float value;
-  float incr = (sliderValue - lastFine) * 0.01;
+  float incr = (sliderValue - lastFine) * incrFine;
   value = inputValue + incr;
   lastFine = sliderValue;
   value = max ( 0.0f, min ( maxValue, value ) );
@@ -182,7 +185,7 @@ static void sliderVibFreqFineCallback(Fl_Widget* o, void* input)
 static void sliderVibAmpCoarseCallback(Fl_Widget* o, void* input) 
 {
   static float lastFine;
-  handleCoarse ( o, input, 0.005, lastFine );
+  handleCoarse ( o, input, maxVibAmp, lastFine );
   float f = getFloatValue ( input );
   theString->vibratorAmplitude = double(f);
 }
@@ -190,7 +193,7 @@ static void sliderVibAmpCoarseCallback(Fl_Widget* o, void* input)
 static void sliderVibAmpFineCallback(Fl_Widget* o, void* input) 
 {
   static float lastFine;
-  handleFine ( o, input, 0.005, lastFine );
+  handleFine ( o, input, maxVibAmp, lastFine );
   float f = getFloatValue ( input );
   theString->vibratorAmplitude = double(f);
 }
@@ -258,12 +261,19 @@ static void vibOnCallback ( Fl_Widget* o )
   theString->vibratorPower ( ((Fl_Light_Button*) o)->value() );
 }
 
+static void vibConstantPowerCallback ( Fl_Widget* o )
+{
+  theString->vibratorConstantPower = ((Fl_Light_Button*) o)->value();
+}
+
 static void sineButtonCallback ( Fl_Widget *o )
 {
+  theString->setVibratorWaveform ( 0 );
 }
 
 static void sawtoothButtonCallback ( Fl_Widget *o )
 {
+  theString->setVibratorWaveform ( 1 );
 }
 
 
@@ -330,6 +340,7 @@ makeVibControls(int x, int y, int width, int height, int coarsefineHeight)
 
   Fl_Button *o = new Fl_Light_Button (0,20, 140,20, "constant energy");
   o->tooltip("Turning on constant energy will cause the vibrator to have less amplitude at higher frequencies.  Turning it off makes it easier to find antinodes at higher frequencies.");
+  o->callback ( vibConstantPowerCallback );
   h->add(o);
 
   Fl_Pack *buts = new Fl_Pack ( 150,0, 20, coarsefineHeight, "" );

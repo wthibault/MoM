@@ -72,6 +72,15 @@ StringModel::updateElement1 ( int i )
 #endif
 
 
+inline
+double
+StringModel::adjustedVibratorAmplitude()
+{
+  if ( vibratorConstantPower )
+    return vibratorAmplitude / (vibratorFreq*vibratorFreq);
+  else
+    return vibratorAmplitude;
+}
 
 ///
 /// computeSamples creates a buffer's worth of output samples
@@ -99,13 +108,19 @@ StringModel::computeSamples ( double *soundout, unsigned int nBufferFrames )
     // octave:14> plot(n,digitalOsc(1,44100,n))
 
     if ( vibratorOn ) {
-      y[0] = vibratorAmplitude * sin ( vibratorPhase );
+      if ( vibratorWaveform == 0 ) 
+	// sine
+	y[0] = adjustedVibratorAmplitude() * sin ( vibratorPhase );
+      else
+	// sawtooth
+	y[0] = adjustedVibratorAmplitude() * (vibratorPhase / (2*M_PI));
+
       vibratorPhase += ( 2*M_PI * vibratorFreq / sampleRate) 
 	                / simulationStepsPerSample;
       while ( vibratorPhase > 2*M_PI )
 	vibratorPhase -= 2*M_PI;
     } else {
-      y[0] = 0.0f;
+      y[0] = 0.0;
     }
 
 
@@ -286,9 +301,11 @@ StringModel::StringModel ( int n,
       bufferFrames ( _bufferFrames ),
       simulationStepsPerSample(_stepspersample),
       vibratorOn ( false ),
+      vibratorWaveform ( 0 ),
       vibratorFreq ( 100.0f ),
       vibratorAmplitude ( 0.001f ),
       vibratorPhase ( 0.0 ),
+      vibratorConstantPower ( false ),
       compressionThreshold ( -10.0 ),
       compressionRatio ( 0.625 ),
       numFramesToAnalyze ( 8 * _bufferFrames ),
@@ -322,7 +339,7 @@ StringModel::StringModel ( int n,
   seed = (unsigned int) time(NULL);
 
   // pluck it
-  pluck();
+  //  pluck();
 
   // set up the fft
   // XXX move this into FFTPrimitive XXX ???
@@ -370,6 +387,12 @@ StringModel::setDecayTime ( double tau )
   if ( tau <= 0 ) return;
   decayTime = tau;
   precomputeConstants();
+}
+
+void
+StringModel::setVibratorWaveform ( int wave )
+{
+  vibratorWaveform = wave;
 }
 
 

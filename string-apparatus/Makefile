@@ -29,7 +29,7 @@ LIBS = -lGL -lGLU -lglut -lGLEW \
 	$(shell pkg-config ftgl --libs) \
 	-lpthread $(FFTW) \
 	$(RTAUDIO_DIR)/librtaudio.a -lasound -lpthread
-OPTS +=  -DNUM_MASSES=1000
+OPTS +=  -DNUM_MASSES=1000 -DNEW_STRING_MODEL
 endif
 
 # for macosx
