@@ -27,8 +27,8 @@ class Histogram {
       }
   Histogram () 
     :  numBins ( 256 ), 
-       minVal ( -1.0 ), 
-       maxVal ( 1.0 ) 
+       minVal ( 100 ), 
+       maxVal ( 100 ) 
 	 { 
 	   bins = new unsigned int [numBins];
 	   clear(); 
@@ -38,6 +38,8 @@ class Histogram {
     for (int i = 0; i < numBins; i++ ) {
       bins[i] = 0;
     }
+    minVal = 100;
+    maxVal = -100;
   }
   inline void update ( double val ) {
     if ( val < minVal ) minVal = val;

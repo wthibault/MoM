@@ -163,6 +163,7 @@ public:
     normals_.clear();
     texCoords_.clear();
 
+    pthread_mutex_lock ( &(theString_->lock) );
     float deltaX = 1.0 / theString_->numMasses;
     for ( int i = 0; i < theString_->numMasses; i++ ) {
       float x,y0,y1,z;
@@ -181,15 +182,17 @@ public:
       theString_->histograms[i].clear();
       //      theString_->histograms[i].minVal = -1e-6;
       //      theString_->histograms[i].maxVal = +1e-6;
-      theString_->histograms[i].minVal = 100;
-      theString_->histograms[i].maxVal = -100;
+      //      theString_->histograms[i].minVal = 100;
+      //      theString_->histograms[i].maxVal = -100;
     }
+    pthread_mutex_unlock ( &(theString_->lock) );
 
     
     long int sizeofPoints = sizeof(glm::vec3)*points_.size();
     int sizeofNormals = sizeof(glm::vec3)*normals_.size();
     int sizeofTexCoords = sizeof(glm::vec2)*texCoords_.size();
-    drawingPrimitive_ = GL_LINES;
+    //    drawingPrimitive_ = GL_LINES;
+    drawingPrimitive_ = GL_TRIANGLE_STRIP;
 
     glBindBuffer ( GL_ARRAY_BUFFER, arrayBuffer_ );
     glBufferSubData( GL_ARRAY_BUFFER, 0, sizeofPoints, &points_[0] );
@@ -206,7 +209,6 @@ public:
     
     Primitive::draw ( mv, proj, mat );
 
-    //    printParams();
   }
 
   void printParam ( const std::string name, float value ) {

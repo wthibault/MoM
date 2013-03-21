@@ -56,14 +56,14 @@ unsigned int bufferFrames = 256; // 256 sample frames ~ 5ms
 const int simStepsPerSample = 2;
 #ifdef NEW_STRING_MODEL
 double initHangerMass = 10.0; // g
-double initMassDensity = 1.0;  // g/m
+double initMassDensity = 0.1;  // g/m
 double initDecayTime = 0.5;
 #else
 double initTension = 0.5;
 double initDamping = 0.99993;
 #endif
 double initVibFreq = 50.0;
-double initVibAmp = 1.0;
+double initVibAmp = 0.001;
 
 #ifndef NUM_MASSES
 #define NUM_MASSES 1000
@@ -250,8 +250,8 @@ MyWindow::init()
 
 
   Primitive *prim;
-  //  prim = new ObjFilePrimitive ( "objfiles/string-apparatus.obj" );
-  prim = new ObjFilePrimitive ( "objfiles/string-scene.obj" );
+  prim = new ObjFilePrimitive ( "objfiles/string-apparatus.obj" );
+  //prim = new ObjFilePrimitive ( "objfiles/string-scene.obj" );
 
   // create a root Instance to contain this primitive
   Instance *instance = new Instance();
