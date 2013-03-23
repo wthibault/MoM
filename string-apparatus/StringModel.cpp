@@ -54,6 +54,8 @@ StringModel::computeSamples ( double *soundout, unsigned int nBufferFrames )
   int iters = nBufferFrames * simulationStepsPerSample;
   double *buf = soundout;
 
+  pthread_mutex_lock(&lock);
+
   for ( int t = 0; t < iters; t++ ) {
 
     double sum = 0;
@@ -85,7 +87,7 @@ StringModel::computeSamples ( double *soundout, unsigned int nBufferFrames )
     }
 
 
-    // use first order curvature est
+    // update positions
     for ( i = 1; i < n-1; i++ ) {
       updateElement1 ( i );
 #ifdef USE_HISTOGRAMS
@@ -93,6 +95,9 @@ StringModel::computeSamples ( double *soundout, unsigned int nBufferFrames )
 #endif
     }
 
+    pthread_mutex_unlock(&lock);
+
+    // triple buffer needed for position update
     swap3 ( y, yold, yolder );
 
     if ( t % simulationStepsPerSample == 0 ) {
@@ -104,7 +109,7 @@ StringModel::computeSamples ( double *soundout, unsigned int nBufferFrames )
       *buf++ = sum;
 #else
       // per channel pickup placement
-      *buf++ = decibelsToLinear(30.0) * yold[numMasses/13];
+      *buf++ = decibelsToLinear(30.0) * yold[numMasses/13]; // XXX setPickupPositions (l,r)
       *buf++ = decibelsToLinear(30.0) * yold[numMasses/5];
 #endif
     }
@@ -128,18 +133,9 @@ StringModel::computeSamples ( double *soundout, unsigned int nBufferFrames )
 void
 StringModel::analyze (double *buffer, unsigned int nBufferFrames)
 {
-#if 0
-  // get the left channel for now
-  for (unsigned int i = 0; i < nBufferFrames; i++ ) {
-    fftwIn[i] = buffer[2*i];
-  }
-  fftw_execute ( fftwPlan );
-  //  std::cout << "\rdc = " << fftwOut[0][0] << std::endl;
-#else
   // dont do the analysis here, but tuck away this buffer for later
   // analysis by FFTPrimitive, as needed for rendering.
   ringBuffer.append ( buffer, nBufferFrames );
-#endif
 }
 
 void
@@ -213,11 +209,11 @@ StringModel::audioCallback ( void *outputBuffer, void *inputBuffer, unsigned int
   double *soundout = (double *)outputBuffer;
   StringModel *s = (StringModel *)userData;
 
-  pthread_mutex_lock(&(s->lock));
+  //  pthread_mutex_lock(&(s->lock));
 
   s->computeSamples ( static_cast<double*>(outputBuffer), nBufferFrames );
   
-  pthread_mutex_unlock ( &(s->lock) );
+  //  pthread_mutex_unlock ( &(s->lock) );
   return 0;
 }
 

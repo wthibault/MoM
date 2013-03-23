@@ -212,13 +212,11 @@ public:
     // draw once as a polygon
 
     drawingPrimitive_ = GL_TRIANGLE_STRIP;
-
     glBindBuffer ( GL_ARRAY_BUFFER, arrayBuffer_ );
     glBufferSubData( GL_ARRAY_BUFFER, 0, sizeofPoints, points_.data() );
     glBufferSubData( GL_ARRAY_BUFFER, sizeofPoints, sizeofNormals, normals_.data() );
     glBufferSubData( GL_ARRAY_BUFFER, sizeofPoints + sizeofNormals, sizeofTexCoords, texCoords_.data() );
     glBindBuffer ( GL_ARRAY_BUFFER, 0 );
-    
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer_);
     int sizeofIndices = indices_.size()*sizeof(unsigned int);
     glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeofIndices, indices_.data());
@@ -231,7 +229,6 @@ public:
     sizeofIndices = outlineIndices_.size()*sizeof(unsigned int);
     glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeofIndices, outlineIndices_.data());
     glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, 0);
-
     Primitive::draw ( mv, proj, mat );
 
     glBindVertexArray(0);

@@ -34,6 +34,7 @@ class Histogram {
 	   clear(); 
 	 }
   ~Histogram () { delete bins; }
+
   void clear () {
 #if USE_HISTOGRAM_BINS
     for (int i = 0; i < numBins; i++ ) {
@@ -43,9 +44,11 @@ class Histogram {
     minVal = 100;
     maxVal = -100;
   }
+
   inline void update ( double val ) {
     if ( val < minVal ) minVal = val;
     if ( val > maxVal ) maxVal = val;
+
 #if USE_HISTOGRAM_BINS
     int bin;
     if ( maxVal - minVal < 1e-6 )
@@ -54,6 +57,7 @@ class Histogram {
       bin = static_cast<int> ( (numBins-1) * ( (val - minVal) / (maxVal - minVal) ) ); // truncate
     bins[bin]++;
 #endif
+
   }
   unsigned int *bins;
   unsigned int numBins;
