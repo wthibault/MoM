@@ -1,5 +1,8 @@
 #ifndef STRINGMODELPRIMITIVE_H
 #define STRINGMODELPRIMITIVE_H
+
+#include <vector>
+
 //////
 /////////////////////////////////////////////////////////////////////////
 // StringModelPrimitive - an SSG rendering Primitive subclassed from ParticleSystem
@@ -63,14 +66,14 @@ public:
     drawingPrimitive_ = GL_POINTS;
 
     glBindBuffer ( GL_ARRAY_BUFFER, arrayBuffer_ );
-    glBufferSubData( GL_ARRAY_BUFFER, 0, sizeofPoints, &points_[0] );
-    glBufferSubData( GL_ARRAY_BUFFER, sizeofPoints, sizeofNormals, &normals_[0] );
-    glBufferSubData( GL_ARRAY_BUFFER, sizeofPoints + sizeofNormals, sizeofTexCoords, &texCoords_[0] );
+    glBufferSubData( GL_ARRAY_BUFFER, 0, sizeofPoints, points_.data() );
+    glBufferSubData( GL_ARRAY_BUFFER, sizeofPoints, sizeofNormals, normals_.data() );
+    glBufferSubData( GL_ARRAY_BUFFER, sizeofPoints + sizeofNormals, sizeofTexCoords, texCoords_.data() );
     glBindBuffer ( GL_ARRAY_BUFFER, 0 );
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer_);
     int sizeofIndices = indices_.size()*sizeof(unsigned int);
-    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeofIndices, &indices_[0]);
+    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeofIndices, indices_.data());
     glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, 0);
     
     glBindVertexArray(0);
@@ -88,12 +91,8 @@ public:
     // temp until HUD
     std::cout << std::endl << std::endl << std::endl;
     printParam ("Ktension    ", theString_->Ktension );
-#ifdef NEW_STRING_MODEL
     printParam ("massDensity ", theString_->massDensity );
     printParam ("decayTime   ", theString_->decayTime );
-#else
-    printParam ("Kdamping    ", theString_->Kdamping );
-#endif
     printParam ("vib freq.   ", theString_->vibratorFreq );
     printParam ("vib amp.    ", theString_->vibratorAmplitude );
     
@@ -126,6 +125,13 @@ public:
     : theString_ ( stringModel ), renderScale_ ( 8.0 )
   {
     StringModelHistogramPrimitive::init();
+    for ( unsigned int i = 0; i < theString_->numMasses; i++ ) {
+      outlineIndices_.push_back ( 2*i );
+    }
+    for ( unsigned int i = 0; i < theString_->numMasses; i++ ) {
+      unsigned int index = (2*theString_->numMasses-1) - 2*i;
+      outlineIndices_.push_back ( index );
+    }
   }
   ~StringModelHistogramPrimitive () {}
 
@@ -166,8 +172,10 @@ public:
     pthread_mutex_lock ( &(theString_->lock) );
     float deltaX = 1.0 / theString_->numMasses;
 
-    theString_->histograms[0].clear();
-    theString_->histograms[theString_->numMasses].clear();
+    theString_->histograms[0].minVal = 0;
+    theString_->histograms[0].maxVal = 0;
+    theString_->histograms[theString_->numMasses-1].minVal = 0;
+    theString_->histograms[theString_->numMasses-1].maxVal = 0;
     
     for ( int i = 0; i < theString_->numMasses; i++ ) {
     //for ( int i = 1; i < theString_->numMasses-1; i++ ) {
@@ -200,23 +208,33 @@ public:
     long int sizeofPoints = sizeof(glm::vec3)*points_.size();
     int sizeofNormals = sizeof(glm::vec3)*normals_.size();
     int sizeofTexCoords = sizeof(glm::vec2)*texCoords_.size();
-    //    drawingPrimitive_ = GL_LINES;
+
+    // draw once as a polygon
+
     drawingPrimitive_ = GL_TRIANGLE_STRIP;
 
     glBindBuffer ( GL_ARRAY_BUFFER, arrayBuffer_ );
-    glBufferSubData( GL_ARRAY_BUFFER, 0, sizeofPoints, &points_[0] );
-    glBufferSubData( GL_ARRAY_BUFFER, sizeofPoints, sizeofNormals, &normals_[0] );
-    glBufferSubData( GL_ARRAY_BUFFER, sizeofPoints + sizeofNormals, sizeofTexCoords, &texCoords_[0] );
+    glBufferSubData( GL_ARRAY_BUFFER, 0, sizeofPoints, points_.data() );
+    glBufferSubData( GL_ARRAY_BUFFER, sizeofPoints, sizeofNormals, normals_.data() );
+    glBufferSubData( GL_ARRAY_BUFFER, sizeofPoints + sizeofNormals, sizeofTexCoords, texCoords_.data() );
     glBindBuffer ( GL_ARRAY_BUFFER, 0 );
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer_);
     int sizeofIndices = indices_.size()*sizeof(unsigned int);
-    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeofIndices, &indices_[0]);
+    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeofIndices, indices_.data());
     glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, 0);
-    
-    glBindVertexArray(0);
-    
     Primitive::draw ( mv, proj, mat );
+
+    // draw again with diff indices to get "outline" (can see the string if its still)
+    drawingPrimitive_ = GL_LINE_STRIP;
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer_);
+    sizeofIndices = outlineIndices_.size()*sizeof(unsigned int);
+    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeofIndices, outlineIndices_.data());
+    glBindBuffer ( GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    Primitive::draw ( mv, proj, mat );
+
+    glBindVertexArray(0);
 
   }
 
@@ -228,9 +246,6 @@ public:
     // temp until HUD
     std::cout << std::endl << std::endl << std::endl;
     printParam ("Ktension    ", theString_->Ktension );
-#ifndef NEW_STRING_MODEL
-    printParam ("Kdamping    ", theString_->Kdamping );
-#endif
     printParam ("vib freq.   ", theString_->vibratorFreq );
     printParam ("vib amp.    ", theString_->vibratorAmplitude );
     
@@ -251,6 +266,7 @@ public:
 
   StringModel *theString_;
   float        renderScale_;
+  std::vector<unsigned int> outlineIndices_;
 };
 
 #endif

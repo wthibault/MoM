@@ -21,7 +21,6 @@ swap3 ( double * &a, double * &b, double * &c )
 }
   
 
-#ifdef NEW_STRING_MODEL
 
 inline
 void
@@ -32,44 +31,6 @@ StringModel::updateElement1 ( int i )
   //  sum = sum + y[i]; // don't need this if using pickups
 }
 
-#else
-
-// don't call this unless there are two samples on either side of i!!!!
-inline
-double
-StringModel::curvature2(int i, double *y)
-{
-  return 3.0 * (y[i+1] + y[i-1])
-    - 0.75 * ( y[i+2] + y[i-2] ) 
-    - 2.5 * y[i];
-}
-
-inline
-void
-StringModel::updateElement2 ( int i ) 
-{
-  double accel;
-  accel = Ktension * curvature2 ( i, yold );
-  //  y[i] += 2 * yold[i] - yolder[i] + accel;
-  v[i] += accel;
-  v[i] *= Kdamping;
-  y[i] = yold[i] + v[i];
-  //  sum = sum + y[i]; // don't need this if using pickups
-}
-
-inline
-void
-StringModel::updateElement1 ( int i ) 
-{
-  double accel;
-  accel = Ktension * (yold[i+1] + yold[i-1] - 2*yold[i]);
-  v[i] += accel;
-  v[i] *= Kdamping;
-  y[i] = yold[i] + v[i];
-  //  sum = sum + y[i]; // don't need this if using pickups
-}
-
-#endif
 
 
 inline
@@ -132,27 +93,7 @@ StringModel::computeSamples ( double *soundout, unsigned int nBufferFrames )
 #endif
     }
 
-    // // use second order curvature est
-    // // handle the next-to-last with a diff curvature estimate
-    // updateElement1 ( 1 );
-    // updateElement1 ( n-1 );
-    // for ( i = 2; i < n-2; i++ ) {
-    //   updateElement2 ( i );
-    // }
-
-    // swap3 ( y, yold, yolder );
-
-
-
-#ifdef NEW_STRING_MODEL
     swap3 ( y, yold, yolder );
-#else
-    double *tmp = y;
-    y = yold;
-    yold = tmp;
-
-#endif
-
 
     if ( t % simulationStepsPerSample == 0 ) {
 
@@ -282,7 +223,6 @@ StringModel::audioCallback ( void *outputBuffer, void *inputBuffer, unsigned int
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifdef NEW_STRING_MODEL
 
 StringModel::StringModel ( int n, 
 			   double _Ktension, 
@@ -307,7 +247,7 @@ StringModel::StringModel ( int n,
       vibratorPhase ( 0.0 ),
       vibratorConstantPower ( false ),
       compressionThreshold ( -10.0 ),
-      compressionRatio ( 0.625 ),
+      compressionRatio ( 0.75 ),
       numFramesToAnalyze ( 8 * _bufferFrames ),
       ringBuffer ( numFramesToAnalyze * 2 )
 {
@@ -354,6 +294,8 @@ StringModel::StringModel ( int n,
 
 }
 
+const double EPSILON = 1e-4;
+
 void
 StringModel::precomputeConstants() {
   double dt = 1.0 / (sampleRate * simulationStepsPerSample);
@@ -363,12 +305,22 @@ StringModel::precomputeConstants() {
   double c = sqrt(Ktension / massDensity);
   c3 = c * dt / dx;
   c3 *= c3;
+  c3 = std::max ( EPSILON, std::min ( 1.0, c3 ) );
   std::cout << "c1,c2,c3 = " << c1 << ' ' << c2 << ' ' << c3 << std::endl;
+}
+
+
+double 
+clamp(double val)
+{
+  if ( val <= EPSILON) return EPSILON;
+  else return val;
 }
 
 void
 StringModel::setTension ( double T )
 {
+  T = clamp(T);
   Ktension = T;
   precomputeConstants();
 }
@@ -376,16 +328,18 @@ StringModel::setTension ( double T )
 void
 StringModel::setMassDensity ( double mu )
 {
-  if ( mu <= 0.0) return;
-  massDensity = mu;
+  //  std::cout << "setMassDensity mu: " << mu << std::endl;
+  //  const double EPSILON = 1e-2;
+  //  if ( std::abs(mu) <= EPSILON) mu = EPSILON;
+  massDensity = clamp(mu);
   precomputeConstants();
 }
 
 void
 StringModel::setDecayTime ( double tau )
 {
-  if ( tau <= 0 ) return;
-  decayTime = tau;
+  //  if ( tau <= 0 ) return;
+  decayTime = clamp(tau);
   precomputeConstants();
 }
 
@@ -397,86 +351,17 @@ StringModel::setVibratorWaveform ( int wave )
 
 
 
-#else
-
-StringModel::StringModel ( int n, 
-			   double _Ktension, 
-			   double _Kdamping, 
-			   int _stepspersample,
-			   int _sampleRate,
-			   int _bufferFrames )
-    : numMasses(n), 
-      Ktension(_Ktension),
-      Kdamping(_Kdamping),
-      sampleRate ( _sampleRate ),
-      bufferFrames ( _bufferFrames ),
-      simulationStepsPerSample(_stepspersample),
-      vibratorOn ( false ),
-      vibratorFreq ( 100.0f ),
-      vibratorAmplitude ( 0.001f ),
-      vibratorPhase ( 0.0 ),
-      compressionThreshold ( -10.0 ),
-      compressionRatio ( 0.625 ),
-      numFramesToAnalyze ( 8 * _bufferFrames ),
-      ringBuffer ( numFramesToAnalyze * 2 )
-{
-  std::cout << "StringModel N,K_t,K_d,ss: " 
-	    << numMasses << ',' 
-	    << Ktension  << ',' 
-	    << Kdamping  << ',' 
-	    << simulationStepsPerSample
-	    << std::endl;
-
-  // allocate displacement and velocity arrays
-  y = new double[numMasses];
-  yold = new double[numMasses];
-  yolder = new double[numMasses];
-  v = new double[numMasses];
-
-  // initialize displacements and velocities
-  for (int i = 0; i < numMasses; i++ ) {
-    v[i]  = 0.0f;
-    yold[i] = y[i] = 0.0f;
-  }
-
-  // init the mutex
-  pthread_mutex_init ( &lock, NULL );
-
-  // init the RNG
-  seed = (unsigned int) time(NULL);
-
-  // pluck it
-  pluck();
-
-  // set up the fft
-  // XXX move this into FFTPrimitive XXX ???
-  fftwIn = (double *)        fftw_malloc(sizeof(double)*numFramesToAnalyze);
-  fftwOut = (fftw_complex *) fftw_malloc ( sizeof(fftw_complex) * (numFramesToAnalyze/2 + 1));
-  fftwPlan = fftw_plan_dft_r2c_1d ( numFramesToAnalyze, fftwIn, fftwOut, FFTW_ESTIMATE );
-
-  // setup the histograms: one per mass! for "vibration modulation transfer function" estimate
-  //  for ( int i = 0; i < numMasses; i++ ) {
-    histograms = new Histogram [numMasses]; // ( 256, -1.0, 1.0 );
-    //  }
-
-}
-
-#endif
-
 StringModel::~StringModel() 
 { 
   delete y; 
   delete yold; 
   delete yolder; 
-#ifndef NEW_STRING_MODEL
-  delete v; 
-#endif
+
   fftw_destroy_plan(fftwPlan);
   fftw_free(fftwIn );
   fftw_free(fftwOut);
 }
 
-#ifdef NEW_STRING_MODEL
 void 
 StringModel::print() 
 {
@@ -490,30 +375,12 @@ StringModel::print()
   std::cout << std::endl;
   pthread_mutex_unlock ( &lock );
 }
-#else
-void 
-StringModel::print() 
-{
-  pthread_mutex_lock ( &lock );
-  std::cout << "N,K_t,K_d,ss: " 
-	    << numMasses << Ktension << Kdamping << simulationStepsPerSample
-	    << std::endl;
-  for (int i = 0; i < numMasses; i++) {
-    std::cout << v[i] << " ";
-  }
-  std::cout << std::endl;
-  pthread_mutex_unlock ( &lock );
-}
-#endif
 
 void 
 StringModel::reset() 
 {
   pthread_mutex_lock ( &lock );
   for (int i = 0 ; i < numMasses; i++ ) {
-#ifndef NEW_STRING_MODEL    
-    v[i] = 0.0;
-#endif
     y[i] = yold[i] = yolder[i] = 0.0;
   }
   pthread_mutex_unlock ( &lock );
@@ -544,9 +411,7 @@ StringModel::pluckvel()
   int pluckAt = double(rand_r(&seed) / double(RAND_MAX)) * (numMasses-2) + 1;
   //    std::cout << pluckAt << std::endl;
   pthread_mutex_lock( &lock );
-#ifndef NEW_STRING_MODEL
-  v[pluckAt] = 3e-4 * Ktension;
-#endif
+  // XXX NOOP
   pthread_mutex_unlock ( &lock );
 }
 

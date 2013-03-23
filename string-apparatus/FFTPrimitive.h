@@ -29,7 +29,38 @@ public:
       texCoords_.push_back ( glm::vec2(i*step, 0) );
       texCoords_.push_back ( glm::vec2(i*step, 1) );
     }
+    // add the box and ticks
+    unsigned int index = 2*nFreqBins;
+    points_.push_back ( glm::vec3(0,0,0) );
+    points_.push_back ( glm::vec3(1,0,0) );
+    points_.push_back ( glm::vec3(1,0,0) );
+    points_.push_back ( glm::vec3(1,1,0) );
+    points_.push_back ( glm::vec3(1,1,0) );
+    points_.push_back ( glm::vec3(0,1,0) );
+    points_.push_back ( glm::vec3(0,1,0) );
+    points_.push_back ( glm::vec3(0,0,0) );
+    for (int i = 0; i<8; i++ ) {
+      normals_.push_back ( glm::vec3(0,0,1) );
+      texCoords_.push_back ( glm::vec2(0,0) );
+      indices_.push_back ( index++ );
+    }
     drawingPrimitive_ = GL_LINES;
+    // ticks
+    double tickSpacingInHz = 1000;
+    int binForFreq = 0;
+    double freq = 0.0;
+    double nyquistRate = theString_->sampleRate / 2;
+    for ( freq = 0; freq < nyquistRate; freq += tickSpacingInHz ) {
+      binForFreq = (freq/nyquistRate) * nFreqBins;
+      points_.push_back ( glm::vec3( freq/nyquistRate, 0.0, 0.0 ) );
+      points_.push_back ( glm::vec3( freq/nyquistRate, -1.0, 0.0 ) );
+      normals_.push_back ( glm::vec3(0,0,1) );
+      normals_.push_back ( glm::vec3(0,0,1) );
+      texCoords_.push_back ( glm::vec2(0,0) );
+      texCoords_.push_back ( glm::vec2(0,0) );
+      indices_.push_back ( index++ );
+      indices_.push_back ( index++ );
+    }
     Primitive::init();
   }
 
@@ -74,6 +105,39 @@ public:
       indices_.push_back ( 2*i );
       indices_.push_back ( 2*i+1 );
     }
+    // add the box and ticks
+    unsigned int index = 2*nFreqBins;
+    float height = 75.0;
+    points_.push_back ( glm::vec3(0,0,0) );
+    points_.push_back ( glm::vec3(1,0,0) );
+    points_.push_back ( glm::vec3(1,0,0) );
+    points_.push_back ( glm::vec3(1,height,0) );
+    points_.push_back ( glm::vec3(1,height,0) );
+    points_.push_back ( glm::vec3(0,height,0) );
+    points_.push_back ( glm::vec3(0,height,0) );
+    points_.push_back ( glm::vec3(0,0,0) );
+    for (int i = 0; i<8; i++ ) {
+      normals_.push_back ( glm::vec3(0,0,1) );
+      texCoords_.push_back ( glm::vec2(0,0) );
+      indices_.push_back ( index++ );
+    }
+    // ticks
+    double tickSpacingInHz = 1000;
+    int binForFreq = 0;
+    double freq = 0.0;
+    double nyquistRate = theString_->sampleRate / 2;
+    for ( freq = 0; freq < nyquistRate; freq += tickSpacingInHz ) {
+      binForFreq = (freq/nyquistRate) * nFreqBins;
+      points_.push_back ( glm::vec3( freq/nyquistRate, 0.0, 0.0 ) );
+      points_.push_back ( glm::vec3( freq/nyquistRate, -3.0, 0.0 ) );
+      normals_.push_back ( glm::vec3(0,0,1) );
+      normals_.push_back ( glm::vec3(0,0,1) );
+      texCoords_.push_back ( glm::vec2(0,0) );
+      texCoords_.push_back ( glm::vec2(0,0) );
+      indices_.push_back ( index++ );
+      indices_.push_back ( index++ );
+    }
+
   }
 
   void draw ( glm::mat4 mv, glm::mat4 proj, Material *mat ) 

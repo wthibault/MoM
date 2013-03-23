@@ -7,17 +7,12 @@ extern StringModel *theString;
 extern const double initVibFreq;
 extern const double initVibAmp;
 
-#ifdef NEW_STRING_MODEL
 extern const double initHangerMass;
 extern const double initDecayTime;
 extern const double initMassDensity;
-#else
-extern const double initTension;
-extern const double initDamping;
-#endif
 
 const float maxVibAmp = 0.005;
-const float incrFine = 0.1;
+const float incrFine = 5.0;
 
 const char *floatFormat = "%8.5f";
 
@@ -69,7 +64,6 @@ handleFine (Fl_Widget* o, void* input, float maxValue, float& lastFine)
 // slider callbacks
 //
 
-#ifdef NEW_STRING_MODEL
 
 static void sliderHangerMassCoarseCallback(Fl_Widget* o, void* input) 
 {
@@ -121,46 +115,6 @@ static void sliderMassDensityFineCallback(Fl_Widget* o, void* input)
   theString->setMassDensity ( double(f) );
 }
 
-#else
-
-static void sliderTensionCoarseCallback(Fl_Widget* o, void* input) 
-{
-  static float lastFine;
-  handleCoarse ( o, input, 1.0, lastFine );
-  float f = getFloatValue ( input );
-  theString->Ktension = double(f);
-}
-
-static void sliderTensionFineCallback(Fl_Widget* o, void* input) 
-{
-  static float lastFine;
-  handleFine ( o, input, 1.0, lastFine );
-  float f = getFloatValue ( input );
-  theString->Ktension = double(f);
-}
-
-
-
-static void sliderDampingCoarseCallback(Fl_Widget* o, void* input) 
-{
-  static float lastFine;
-  handleCoarse ( o, input, 1.0, lastFine );
-  float f = getFloatValue ( input );
-  theString->Kdamping = double(f);
-}
-
-static void sliderDampingFineCallback(Fl_Widget* o, void* input) 
-{
-  static float lastFine;
-  handleFine ( o, input, 1.0, lastFine );
-  float f = getFloatValue ( input );
-  theString->Kdamping = double(f);
-}
-
-
-#endif
-// #ifdef NEW_STRING_MODEL
-
 
 static void sliderVibFreqCoarseCallback(Fl_Widget* o, void* input) 
 {
@@ -202,7 +156,6 @@ static void sliderVibAmpFineCallback(Fl_Widget* o, void* input)
 // Fl_Input callbacks
 //
 
-#ifdef NEW_STRING_MODEL
 
 static void inputHangerMassCallback ( Fl_Widget* o, void *theFloat )
 {
@@ -221,23 +174,6 @@ static void inputMassDensityCallback ( Fl_Widget* o, void *theFloat )
   float f = getFloatValue ( o );
   theString->setMassDensity ( double(f) );
 }
-
-#else
-
-static void inputTensionCallback ( Fl_Widget* o, void *theFloat )
-{
-  float f = getFloatValue ( o );
-  theString->Ktension = double(f);
-}
-
-static void inputDampingCallback ( Fl_Widget* o, void *theFloat )
-{
-  float f = getFloatValue ( o );
-  theString->Kdamping = double(f);
-}
-
-#endif
-// #ifdef NEW_STRING_MODEL
 
 static void inputVibFreqCallback ( Fl_Widget* o, void *theFloat )
 {
@@ -387,7 +323,6 @@ makeVibControls(int x, int y, int width, int height, int coarsefineHeight)
   return widgetPacker;
 }
 
-#ifdef NEW_STRING_MODEL
 
 Fl_Group* 
 makeNewStringControls(int x, int y, int width, int height, int coarsefineHeight )
@@ -422,49 +357,13 @@ makeNewStringControls(int x, int y, int width, int height, int coarsefineHeight 
   return widgetPacker;
 }
 
-#else
-
-Fl_Group* 
-makeStringControls(int x, int y, int width, int height, int coarsefineHeight )
-{
-  //  Fl_Pack *widgetPacker = new Fl_Pack( 0, offsetWidgets, winWidth, winHeight - offsetWidgets );
-  Fl_Pack *widgetPacker = new Fl_Pack( x,y,width,height);
-  widgetPacker->spacing(10);
-
-  Fl_Group *pack1 = makeCoarseFineControl ( width,coarsefineHeight,"Tension", 
-					    sliderTensionCoarseCallback, 
-					    sliderTensionFineCallback, 
-					    inputTensionCallback,
-					    initTension);
-
-  widgetPacker->add(pack1);
-
-  Fl_Group *pack2 = makeCoarseFineControl ( width,coarsefineHeight,"Damping", 
-					    sliderDampingCoarseCallback, 
-					    sliderDampingFineCallback, 
-					    inputDampingCallback,
-					    initDamping);
-  widgetPacker->add(pack2);
-  widgetPacker->end();
-
-  return widgetPacker;
-}
-#endif
-// #ifdef NEW_STRING_MODEL
-
 
 Fl_Pack* 
 makeApparatusControls ( int winWidth, int winHeight, int offsetWidgets, int coarsefineHeight )
 {
   Fl_Pack *packer = new Fl_Pack( 0, offsetWidgets, winWidth, winHeight - offsetWidgets );
   packer->add(makeVibControls(0,offsetWidgets,winWidth/2,winHeight/2-offsetWidgets, coarsefineHeight));
-
-#ifdef NEW_STRING_MODEL
   packer->add(makeNewStringControls(0,offsetWidgets,winWidth/2,winHeight/2-offsetWidgets, coarsefineHeight));
-#else
-  packer->add(makeStringControls(0,offsetWidgets,winWidth/2,winHeight/2-offsetWidgets, coarsefineHeight));
-#endif
-
   packer->add ( new Fl_Window ( winWidth/2, winHeight/2 ) ); // ?????
   packer->end();
   return packer;

@@ -54,14 +54,9 @@ unsigned int bufferFrames = 256; // 256 sample frames ~ 5ms
 // simulation params
 
 const int simStepsPerSample = 2;
-#ifdef NEW_STRING_MODEL
-double initHangerMass = 10.0; // g
+double initHangerMass = 20.0; // g
 double initMassDensity = 0.1;  // g/m
 double initDecayTime = 0.5;
-#else
-double initTension = 0.5;
-double initDamping = 0.99993;
-#endif
 double initVibFreq = 50.0;
 double initVibAmp = 0.001;
 
@@ -107,32 +102,18 @@ keyboard (unsigned char key, int x, int y)
   case 'e' : 
     // coarse damping control - up
     //    theString->Kdamping *= upCoarse * dampAdjustment;
-#ifndef NEW_STRING_MODEL
-    theString->Kdamping += dampAdjustment;
-    theString->Kdamping = fmin ( 1.0, theString->Kdamping );
-#endif
     break;
   case 'E' : 
     // fine damping control - up
     //    theString->Kdamping *= upFine / dampAdjustment;
-#ifndef NEW_STRING_MODEL
-    theString->Kdamping += dampAdjustment/10;
-    theString->Kdamping = fmin ( 1.0, theString->Kdamping );
-#endif
     break;
   case 'd' : 
     // coarse damping control - down
     //    theString->Kdamping *= downCoarse / dampAdjustment;
-#ifndef NEW_STRING_MODEL
-    theString->Kdamping -= dampAdjustment;
-#endif
     break;
   case 'D' : 
     // fine damping control - down
     //    theString->Kdamping *= downFine / dampAdjustment;
-#ifndef NEW_STRING_MODEL
-    theString->Kdamping -= dampAdjustment/10;
-#endif
     break;
 
 
@@ -289,7 +270,6 @@ MyWindow::init()
   //  glHint ( GL_LINE_SMOOTH, GL_NICEST );
 
   // the simulation 
-#ifdef NEW_STRING_MODEL
   theString = new StringModel ( NUM_MASSES, 
 				initHangerMass * 9.8,
 				initMassDensity, 
@@ -298,10 +278,6 @@ MyWindow::init()
 				simStepsPerSample, 
 				sampleRate, 
 				bufferFrames );
-#else
-  theString = new StringModel ( NUM_MASSES, initTension, initDamping,
-				simStepsPerSample, sampleRate, bufferFrames );
-#endif
 
   // the audio
   if ( dac.getDeviceCount() < 1 ) {
@@ -359,12 +335,16 @@ MyWindow::init()
 
   instance->addChild ( smp );
 
+
   FFTPrimitive *fft = new FFTPrimitive ( theString );
   Instance *fftTransform = new Instance;
   fftTransform->addChild ( fft );
-  fftTransform->setMatrix ( glm::scale ( glm::translate ( glm::mat4(), 
-							  glm::vec3 (-1.25, 0.1, 0.0) ),
-					 glm::vec3(0.75, 1.0/128.0, 1.0) ) );
+  //  fftTransform->setMatrix ( glm::scale ( glm::translate ( glm::mat4(), 
+  //							  glm::vec3 (-1.25, 0.1, 0.0) ),
+  //					 glm::vec3(0.75, 1.0/128.0, 1.0) ) );
+  fftTransform->setMatrix ( glm::scale ( glm::translate ( glm::rotate ( glm::mat4(), -90.0f, glm::vec3(1.0,0.0,0.0) ),
+							  glm::vec3 (-1.2, -0.3, -0.85) ),
+					 glm::vec3(2.0, 1.0/128.0, 1.0) ) );
   instance->addChild ( fftTransform );
 
   Material *fftmat = new Material;
