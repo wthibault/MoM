@@ -46,7 +46,7 @@ LIBS = $(RTAUDIO_DIR)/librtaudio.a \
 	-lpthread -framework CoreAudio -framework CoreFoundation \
 	-L/usr/X11/lib -lftgl \
 	-L/usr/local/lib -lfftw3
-OPTS +=  -DNUM_MASSES=100 -DNEW_STRING_MODEL
+OPTS +=  -DNUM_MASSES=1000 -DNEW_STRING_MODEL
 endif
 
 SSG_INCS = $(INC_DIR)/ssg.h \

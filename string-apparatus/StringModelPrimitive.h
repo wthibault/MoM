@@ -140,12 +140,12 @@ public:
       points_.push_back ( glm::vec3(0,0,0) );
       normals_.push_back ( glm::vec3(0,0,1) );
       normals_.push_back ( glm::vec3(0,0,1) );
-      indices_.push_back ( i );
-      indices_.push_back ( i );
+      indices_.push_back ( 2*i );
+      indices_.push_back ( 2*i+1 );
       texCoords_.push_back ( glm::vec2(i/theString_->numMasses, 0) );
       texCoords_.push_back ( glm::vec2(i/theString_->numMasses, 1) );
     }
-    drawingPrimitive_ = GL_LINES;
+    drawingPrimitive_ = GL_TRIANGLE_STRIP;
     Primitive::init();
   }
 
@@ -165,7 +165,12 @@ public:
 
     pthread_mutex_lock ( &(theString_->lock) );
     float deltaX = 1.0 / theString_->numMasses;
+
+    theString_->histograms[0].clear();
+    theString_->histograms[theString_->numMasses].clear();
+    
     for ( int i = 0; i < theString_->numMasses; i++ ) {
+    //for ( int i = 1; i < theString_->numMasses-1; i++ ) {
       float x,y0,y1,z;
       x = 2*(i * deltaX)-1;
       y0 = renderScale_ * theString_->histograms[i].minVal;
@@ -177,8 +182,12 @@ public:
       normals_.push_back ( glm::vec3(0,0,1) );
       texCoords_.push_back ( glm::vec2(i * deltaX, 0) );
       texCoords_.push_back ( glm::vec2(i * deltaX, 1) );
-      indices_.push_back ( 2*i );
+
+      indices_.push_back ( 2*i );   // since the loop starts at zero
       indices_.push_back ( 2*i+1 );
+      // indices_.push_back ( 2*(i-1) );   // since the loop starts at one
+      //indices_.push_back ( 2*(i-1)+1 );
+
       theString_->histograms[i].clear();
       //      theString_->histograms[i].minVal = -1e-6;
       //      theString_->histograms[i].maxVal = +1e-6;
