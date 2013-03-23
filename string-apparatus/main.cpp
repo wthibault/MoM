@@ -41,15 +41,15 @@ RtAudio dac;
 const char *shader = "PhongShading";
 
 // window and widget constants
-const int winWidth = 800;
-const int winHeight = 600;
+const int winWidth = 1024;
+const int winHeight = 768;
 const int offsetWidgets = winHeight / 2;
 const int coarsefineHeight = (winHeight - offsetWidgets) / 7;
 
 // audio params
 const int sampleRate = 44100;
 unsigned int bufferFrames = 256; // 256 sample frames ~ 5ms 
-//unsigned int bufferFrames = 1024; // 256 sample frames ~ 5ms 
+//unsigned int bufferFrames = 1024; // 1024 sample frames ~ 20ms 
 
 // simulation params
 
@@ -312,7 +312,6 @@ MyWindow::init()
   }
 
   // the rendering
-#ifdef USE_HISTOGRAMS
   StringModelHistogramPrimitive *smp = new StringModelHistogramPrimitive ( theString );
   Material *histoMat = new Material;
   histoMat->ambient = vec4 ( 1,1,1,1 );
@@ -329,9 +328,6 @@ MyWindow::init()
   glUniform1fv(glGetUniformLocation(histoMat->program,"bins"), 256, opacityValues);
   glUseProgram(0);
 
-#else
-  StringModelPrimitive *smp = new StringModelPrimitive ( theString );
-#endif
 
   instance->addChild ( smp );
 
@@ -339,9 +335,12 @@ MyWindow::init()
   FFTPrimitive *fft = new FFTPrimitive ( theString );
   Instance *fftTransform = new Instance;
   fftTransform->addChild ( fft );
+  // on the guitar
   //  fftTransform->setMatrix ( glm::scale ( glm::translate ( glm::mat4(), 
   //							  glm::vec3 (-1.25, 0.1, 0.0) ),
   //					 glm::vec3(0.75, 1.0/128.0, 1.0) ) );
+
+  // on the desk
   fftTransform->setMatrix ( glm::scale ( glm::translate ( glm::rotate ( glm::mat4(), -90.0f, glm::vec3(1.0,0.0,0.0) ),
 							  glm::vec3 (-1.2, -0.3, -0.85) ),
 					 glm::vec3(2.0, 1.0/128.0, 1.0) ) );

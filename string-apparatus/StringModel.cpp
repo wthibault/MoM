@@ -11,6 +11,7 @@
 // BEGIN pure c++ audio computation
 // --no calls to the outside world allowed
 
+inline
 void
 swap3 ( double * &a, double * &b, double * &c )
 {
@@ -54,7 +55,9 @@ StringModel::computeSamples ( double *soundout, unsigned int nBufferFrames )
   int iters = nBufferFrames * simulationStepsPerSample;
   double *buf = soundout;
 
+#ifdef LOCK_STRING
   pthread_mutex_lock(&lock);
+#endif
 
   for ( int t = 0; t < iters; t++ ) {
 
@@ -63,6 +66,7 @@ StringModel::computeSamples ( double *soundout, unsigned int nBufferFrames )
     int i;
     double accel;
 
+    // XXX REFACTOR
     // see a plot:
     // octave:11> n=0:44100;
     // octave:12> function y=digitalOsc(f,sr,n)
@@ -90,12 +94,8 @@ StringModel::computeSamples ( double *soundout, unsigned int nBufferFrames )
     // update positions
     for ( i = 1; i < n-1; i++ ) {
       updateElement1 ( i );
-#ifdef USE_HISTOGRAMS
       histograms[i].update ( y[i] );
-#endif
     }
-
-    pthread_mutex_unlock(&lock);
 
     // triple buffer needed for position update
     swap3 ( y, yold, yolder );
@@ -115,6 +115,11 @@ StringModel::computeSamples ( double *soundout, unsigned int nBufferFrames )
     }
 
   }
+
+#ifdef LOCK_STRING
+  pthread_mutex_unlock(&lock);
+#endif
+
 
   // 
   // ship a copy off for FFT analysis

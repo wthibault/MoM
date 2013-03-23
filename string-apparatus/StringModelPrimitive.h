@@ -169,7 +169,10 @@ public:
     normals_.clear();
     texCoords_.clear();
 
+#ifdef LOCK_STRING
     pthread_mutex_lock ( &(theString_->lock) );
+#endif
+
     float deltaX = 1.0 / theString_->numMasses;
 
     theString_->histograms[0].minVal = 0;
@@ -202,7 +205,10 @@ public:
       //      theString_->histograms[i].minVal = 100;
       //      theString_->histograms[i].maxVal = -100;
     }
+
+#ifdef LOCK_STRING
     pthread_mutex_unlock ( &(theString_->lock) );
+#endif
 
     
     long int sizeofPoints = sizeof(glm::vec3)*points_.size();

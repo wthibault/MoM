@@ -1,5 +1,6 @@
 #OPTS = -g
-OPTS = -O3 -DUSE_HISTOGRAMS -DREFRESH_PERIOD=20
+OPTS = -O3 -DLOCK_STRING
+#OPTS = -O3
 
 # change these for your system
 INC_DIR=../../4848/ssg/include
@@ -46,7 +47,7 @@ LIBS = $(RTAUDIO_DIR)/librtaudio.a \
 	-lpthread -framework CoreAudio -framework CoreFoundation \
 	-L/usr/X11/lib -lftgl \
 	-L/usr/local/lib -lfftw3
-OPTS +=  -DNUM_MASSES=1000
+OPTS +=  -DNUM_MASSES=256
 endif
 
 SSG_INCS = $(INC_DIR)/ssg.h \

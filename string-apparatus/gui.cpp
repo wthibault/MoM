@@ -223,7 +223,7 @@ makeCoarseFineControl ( int w, int h, const char *label,
 			double initValue )
 {
   int inputHeight = 20;
-  int inputWidth = 50;
+  int inputWidth = 40;
   int horizMargin = 30;
   //  int horizOffset = w/5;
   int horizRemain = w - inputWidth - 2*horizMargin;
@@ -272,6 +272,7 @@ makeVibControls(int x, int y, int width, int height, int coarsefineHeight)
   
   Fl_Light_Button *onbut = new Fl_Light_Button ( 0,0, 140, 20, "Vibrator on");
   onbut->callback ( vibOnCallback );
+  onbut->tooltip ("Turn the vibrator on or off.");
   h->add ( onbut );
 
   Fl_Button *o = new Fl_Light_Button (0,20, 140,20, "constant energy");
@@ -311,12 +312,14 @@ makeVibControls(int x, int y, int width, int height, int coarsefineHeight)
 					  sliderVibFreqFineCallback, 
 					  inputVibFreqCallback,
 					  initVibFreq);
+  pack3->tooltip ("Control the vibrator frequency.");
   widgetPacker->add(pack3);
   Fl_Group *pack4 = makeCoarseFineControl(width,coarsefineHeight,"Vib. Amp.", 
 					  sliderVibAmpCoarseCallback, 
 					  sliderVibAmpFineCallback, 
 					  inputVibAmpCallback,
 					  initVibAmp);
+  pack4->tooltip ("Control the amplitude of the vibrator.");
   widgetPacker->add(pack4);
   widgetPacker->end();
 
@@ -336,6 +339,7 @@ makeNewStringControls(int x, int y, int width, int height, int coarsefineHeight 
 					    inputHangerMassCallback,
 					    initHangerMass);
 
+  pack1->tooltip("Control the amount of mass on the hanger at the end of the string.  The tension on this string is due to this mass being accelerated by gravity.");
   widgetPacker->add(pack1);
 
   Fl_Group *pack2 = makeCoarseFineControl ( width,coarsefineHeight,"Decay Time", 
@@ -343,6 +347,7 @@ makeNewStringControls(int x, int y, int width, int height, int coarsefineHeight 
 					    sliderDecayTimeFineCallback, 
 					    inputDecayTimeCallback,
 					    initDecayTime);
+  pack2->tooltip("Control the time is takes for a vibration in the strinp to die down.");
   widgetPacker->add(pack2);
 
   Fl_Group *pack3 = makeCoarseFineControl ( width,coarsefineHeight,"Mass Density", 
@@ -350,6 +355,7 @@ makeNewStringControls(int x, int y, int width, int height, int coarsefineHeight 
 					    sliderMassDensityFineCallback, 
 					    inputMassDensityCallback,
 					    initMassDensity);
+  pack3->tooltip("Control the mass per unit length along the string.");
   widgetPacker->add(pack3);
 
   widgetPacker->end();
