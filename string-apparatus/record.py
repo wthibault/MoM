@@ -5,7 +5,8 @@ now = datetime.datetime.now()
 ext = 'mpg'
 
 #size = 'hd1080'
-size = 'hd720'
+#size = 'hd720'
+size = 'xga'
 
 outfile = now.strftime('screencaps/screencap-%d%h%YT%H%M%S.' + ext)
 #cmd = 'ffmpeg -f x11grab -s ' + size + ' -r 30 -i :0.0  ' + outfile
@@ -13,9 +14,13 @@ outfile = now.strftime('screencaps/screencap-%d%h%YT%H%M%S.' + ext)
 #cmd = 'ffmpeg -f x11grab -s ' + size + ' -r 30 -i :0.0  -target ntsc-dvd ' + outfile
 
 #audio_options = '-f alsa -ac 2 -i hw:0,0'
-audio_options = '-f alsa -ac 2 -i hw:0'
+#audio_options = '-f alsa -ac 2 -i hw:0'
 
-cmd = 'ffmpeg ' + audio_options + ' -f x11grab -s ' + size + ' -r 30 -i :0.0  -target ntsc-dvd ' + outfile
+# for the c-media (SIIG) usb device
+audio_options = '-f alsa -ac 1 -i hw:2,0'
+
+#cmd = 'ffmpeg ' + audio_options + ' -f x11grab -s ' + size + ' -r 30 -i :0.0  -target ntsc-dvd ' + outfile
+cmd = 'avconv ' + audio_options + ' -f x11grab -s ' + size + ' -r 30 -i :0.0  -target ntsc-dvd ' + outfile
 
 print cmd
 os.system(cmd)
