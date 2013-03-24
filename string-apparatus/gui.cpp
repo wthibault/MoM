@@ -223,8 +223,8 @@ makeCoarseFineControl ( int w, int h, const char *label,
 			double initValue )
 {
   int inputHeight = 20;
-  int inputWidth = 40;
-  int horizMargin = 30;
+  int inputWidth = 45;
+  int horizMargin = 40;
   //  int horizOffset = w/5;
   int horizRemain = w - inputWidth - 2*horizMargin;
   int horizRemainEnd = horizRemain - horizMargin;
@@ -307,7 +307,7 @@ makeVibControls(int x, int y, int width, int height, int coarsefineHeight)
 
   widgetPacker->add(h);
 
-  Fl_Group *pack3 = makeCoarseFineControl(width,coarsefineHeight,"Vib. Freq.", 
+  Fl_Group *pack3 = makeCoarseFineControl(width,coarsefineHeight,"Vib.Freq.", 
 					  sliderVibFreqCoarseCallback, 
 					  sliderVibFreqFineCallback, 
 					  inputVibFreqCallback,

@@ -203,6 +203,7 @@ class MyWindow : public Fl_Gl_Window {
   int handle(int);
   ModelNode *root;
   Camera     camera;
+  Instance *loadBackgroundScene();
 public:
   MyWindow ( int x, int y , int w, int h, const char *L );
   void init();
@@ -217,6 +218,32 @@ MyWindow::MyWindow ( int x, int y , int w, int h, const char *L )
   end();
 }
 
+
+Instance *
+MyWindow::loadBackgroundScene()
+{
+  std::vector<const char*> parts;
+  parts.push_back( "objfiles/Desk.obj" );
+  parts.push_back( "objfiles/MassHolder.obj" );
+  parts.push_back( "objfiles/Cylinder.obj" );
+  parts.push_back( "objfiles/VibratorStand.obj" );
+  parts.push_back( "objfiles/vibrator.obj" );
+
+  Instance *instance = new Instance();
+  instance->setMatrix ( mat4() );
+
+  Primitive *prim;
+  //  prim = new ObjFilePrimitive ( "objfiles/string-apparatus.obj" );
+  //prim = new ObjFilePrimitive ( "objfiles/string-scene.obj" );
+  for (int i = 0; i < parts.size(); i++ ) {
+    prim = new ObjFilePrimitive ( parts[i] );
+    instance->addChild ( prim );
+  }
+
+  return instance;
+}
+
+
 void
 MyWindow::init()
 {
@@ -230,14 +257,7 @@ MyWindow::init()
 #endif
 
 
-  Primitive *prim;
-  prim = new ObjFilePrimitive ( "objfiles/string-apparatus.obj" );
-  //prim = new ObjFilePrimitive ( "objfiles/string-scene.obj" );
-
-  // create a root Instance to contain this primitive
-  Instance *instance = new Instance();
-  instance->setMatrix ( mat4() );
-  instance->addChild ( prim );
+  Instance *instance = loadBackgroundScene();
 
   // the lights are global for all objects in the scene
   RenderingEnvironment::getInstance().lightPosition = vec4 ( 5,5,10,1 );

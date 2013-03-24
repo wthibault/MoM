@@ -89,7 +89,7 @@ endif
 #	$(CXX) $< $(LINKFLTK_ALL) -o $@
 
 ##############
-all : 	string-apparatus $(SSG_DATA)/objfiles/string-apparatus.obj $(SSG_DATA)/objfiles/string-scene.obj
+all : 	string-apparatus 
 
 string-apparatus : main.cpp \
 		StringModelPrimitive.h \
@@ -97,8 +97,8 @@ string-apparatus : main.cpp \
 		StringModel.o \
 		gui.o \
 		$(SSG_INCS) \
-		$(LIB_DIR)/ssg.a \
-		$(SSG_DATA)/objfiles/string-apparatus.obj 
+		$(LIB_DIR)/ssg.a 
+#		$(SSG_DATA)/objfiles/string-apparatus.obj 
 	g++ $(OPTS) -o string-apparatus $(INCLUDES) \
 		main.cpp \
 		StringModel.o \
@@ -115,13 +115,13 @@ StringModel.o : StringModel.h StringModel.cpp
 gui.o : gui.h gui.cpp 
 	g++ $(OPTS) -c gui.cpp $(INCLUDES)
 
-$(SSG_DATA)/objfiles/string-apparatus.obj : blender/string-apparatus.obj
-	cp blender/string-apparatus.obj $(SSG_DATA)/objfiles
-	cp blender/string-apparatus.mtl $(SSG_DATA)/objfiles
+objfiles/string-apparatus.obj : blender/string-apparatus.obj
+	cp blender/string-apparatus.obj objfiles
+	cp blender/string-apparatus.mtl objfiles
 
-$(SSG_DATA)/objfiles/string-scene.obj : blender/string-scene.obj
-	cp blender/string-scene.obj $(SSG_DATA)/objfiles
-	cp blender/string-scene.mtl $(SSG_DATA)/objfiles
+objfiles/string-scene.obj : blender/string-scene.obj
+	cp blender/string-scene.obj objfiles
+	cp blender/string-scene.mtl objfiles
 
 clean :
 	rm -f *.o
