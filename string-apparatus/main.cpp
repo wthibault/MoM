@@ -222,12 +222,13 @@ MyWindow::MyWindow ( int x, int y , int w, int h, const char *L )
 Instance *
 MyWindow::loadBackgroundScene()
 {
+  // be sure to get these from blender/string-apparatus.blend as the dimensions have to match numerous magic numbers in the gui
   std::vector<const char*> parts;
+  parts.push_back( "objfiles/vibrator.obj" );
   parts.push_back( "objfiles/Desk.obj" );
   parts.push_back( "objfiles/MassHolder.obj" );
   parts.push_back( "objfiles/Cylinder.obj" );
   parts.push_back( "objfiles/VibratorStand.obj" );
-  parts.push_back( "objfiles/vibrator.obj" );
 
   Instance *instance = new Instance();
   instance->setMatrix ( mat4() );

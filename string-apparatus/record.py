@@ -17,7 +17,8 @@ outfile = now.strftime('screencaps/screencap-%d%h%YT%H%M%S.' + ext)
 #audio_options = '-f alsa -ac 2 -i hw:0'
 
 # for the c-media (SIIG) usb device
-audio_options = '-f alsa -ac 1 -i hw:2,0'
+# XXX may have to change the number after reboots. ug.
+audio_options = '-f alsa -ac 1 -i hw:1,0'
 
 #cmd = 'ffmpeg ' + audio_options + ' -f x11grab -s ' + size + ' -r 30 -i :0.0  -target ntsc-dvd ' + outfile
 cmd = 'avconv ' + audio_options + ' -f x11grab -s ' + size + ' -r 30 -i :0.0  -target ntsc-dvd ' + outfile
