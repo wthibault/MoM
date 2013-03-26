@@ -218,5 +218,6 @@ struct StringModel {
   RingBuffer    ringBuffer;
 
   Histogram    *histograms;
+  bool         freshHistograms;
 };
 
