@@ -45,9 +45,12 @@ INCLUDES = -I$(INC_DIR) \
 
 LIBS = $(RTAUDIO_DIR)/librtaudio.a \
 	-lpthread -framework CoreAudio -framework CoreFoundation \
-	-L/usr/X11/lib -lftgl \
-	-L/usr/local/lib -lfftw3
+	-L/usr/X11/lib \
+	/usr/local/lib/libftgl.a \
+	-L/usr/local/lib -lfftw3 \
+	-headerpad_max_install_names
 OPTS +=  -DNUM_MASSES=256
+POST_BUILD_STEP = cp string-apparatus macosx/StringApparatus.app/Contents/MacOS
 endif
 
 SSG_INCS = $(INC_DIR)/ssg.h \
@@ -107,6 +110,7 @@ string-apparatus : main.cpp \
 		-I$(RTAUDIO_DIR)  \
 		$(LIBS) \
 		$(LINKFLTK_ALL)
+	$(POST_BUILD_STEP)
 
 
 StringModel.o : StringModel.h StringModel.cpp
