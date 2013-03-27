@@ -3,9 +3,9 @@ OPTS = -O3 -DLOCK_STRING
 #OPTS = -O3
 
 # change these for your system
-INC_DIR=../../4848/ssg/include
-LIB_DIR=../../4848/ssg/src
-SSG_DATA=../../4848/ssg/data
+INC_DIR=../ssg/include
+LIB_DIR=../ssg/src
+SSG_DATA=../ssg/data
 
 HOST_PLATFORM := $(shell $(CPP) -dumpmachine)
 $(info $(HOST_PLATFORM))
@@ -52,6 +52,30 @@ LIBS = $(RTAUDIO_DIR)/librtaudio.a \
 OPTS +=  -DNUM_MASSES=256
 POST_BUILD_STEP = cp string-apparatus macosx/StringApparatus.app/Contents/MacOS
 endif
+
+
+# for MINGW on windows
+ifeq   "$(HOST_PLATFORM)" "mingw32"
+RTAUDIO_DIR = rtaudio-4.0.10
+INCLUDES += -I$(INC_DIR) \
+	-I$(RTAUDIO_DIR) \
+	-I../include \
+	-I/usr/local/include \
+	-I../ssg/win32/ssg-lib/glew-1.9.0/include  -DGLEW_STATIC  \
+	-I../ssg/win32/ssg-lib/glut-3.7.6-bin \
+	-D__WIN32__
+
+
+LIBS = $(RTAUDIO_DIR)/librtaudio.a \
+	/usr/local/lib/libfftw3.a \
+	/usr/local/lib/libfltk.a \
+	-ldsound -lwinmm\
+	-L../ssg/win32/ssg-lib/glut-3.7.6-bin -lglut32
+
+OPTS +=  -DNUM_MASSES=500
+endif
+
+
 
 SSG_INCS = $(INC_DIR)/ssg.h \
 	$(INC_DIR)/CheckError.h \
@@ -127,9 +151,19 @@ objfiles/string-scene.obj : blender/string-scene.obj
 	cp blender/string-scene.obj objfiles
 	cp blender/string-scene.mtl objfiles
 
+ifeq   "$(HOST_PLATFORM)" "mingw32"
+package :
+	rm -rf win32/StringApparatus
+	mkdir win32/StringApparatus
+	cp string-apparatus.exe win32/StringApparatus
+	cp -r objfiles/ win32/StringApparatus/objfiles
+	cp -r shaders120/ win32/StringApparatus/shaders120
+endif
+
 clean :
 	rm -f *.o
 	rm -f shaders/*~
 	rm -f *~
 	rm -f string-apparatus
 	rm -rf *.dSYM
+	rm -rf win32/StringApparatus

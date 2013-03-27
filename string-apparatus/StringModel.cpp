@@ -55,9 +55,7 @@ StringModel::computeSamples ( double *soundout, unsigned int nBufferFrames )
   int iters = nBufferFrames * simulationStepsPerSample;
   double *buf = soundout;
 
-#ifdef LOCK_STRING
-  pthread_mutex_lock(&lock);
-#endif
+  lock();
 
   for ( int t = 0; t < iters; t++ ) {
 
@@ -119,9 +117,7 @@ StringModel::computeSamples ( double *soundout, unsigned int nBufferFrames )
 
   freshHistograms = true;
 
-#ifdef LOCK_STRING
-  pthread_mutex_unlock(&lock);
-#endif
+  unlock();
 
 
   // 
@@ -217,11 +213,8 @@ StringModel::audioCallback ( void *outputBuffer, void *inputBuffer, unsigned int
   double *soundout = (double *)outputBuffer;
   StringModel *s = (StringModel *)userData;
 
-  //  pthread_mutex_lock(&(s->lock));
-
   s->computeSamples ( static_cast<double*>(outputBuffer), nBufferFrames );
-  
-  //  pthread_mutex_unlock ( &(s->lock) );
+
   return 0;
 }
 
@@ -278,10 +271,13 @@ StringModel::StringModel ( int n,
   precomputeConstants();
   
   // init the mutex
-  pthread_mutex_init ( &lock, NULL );
+  initLock();
 
   // init the RNG
+#ifdef __WIN32__
+#else  
   seed = (unsigned int) time(NULL);
+#endif
 
   // pluck it
   //  pluck();
@@ -370,7 +366,7 @@ StringModel::~StringModel()
 void 
 StringModel::print() 
 {
-  pthread_mutex_lock ( &lock );
+  lock();
   std::cout << "N,K_t,mu,tau,ss: " 
 	    << numMasses << Ktension << massDensity << decayTime << simulationStepsPerSample
 	    << std::endl;
@@ -378,26 +374,31 @@ StringModel::print()
     std::cout << y[i] << " ";
   }
   std::cout << std::endl;
-  pthread_mutex_unlock ( &lock );
+  unlock();
 }
 
 void 
 StringModel::reset() 
 {
-  pthread_mutex_lock ( &lock );
+  lock();
   for (int i = 0 ; i < numMasses; i++ ) {
     y[i] = yold[i] = yolder[i] = 0.0;
   }
-  pthread_mutex_unlock ( &lock );
+  unlock();
 }
 
 
 void 
 StringModel::pluck() 
 {
-  int pluckAt = double(rand_r(&seed) / double(RAND_MAX)) * (numMasses-2) + 1;
+  int pluckAt;
+#  ifdef __WIN32__
+    pluckAt = double(rand() / double(RAND_MAX)) * (numMasses-2) + 1;
+#else
+    pluckAt = double(rand_r(&seed) / double(RAND_MAX)) * (numMasses-2) + 1;
+#endif
   //    std::cout << pluckAt << std::endl;
-  pthread_mutex_lock( &lock );
+    lock();
   double maxDisp = 0.001;
   double upSlope = maxDisp / pluckAt;
   double downSlope = maxDisp / (numMasses-pluckAt);
@@ -407,17 +408,21 @@ StringModel::pluck()
     else
       yold[i] = maxDisp - (i-pluckAt)*downSlope; 
   }
-  pthread_mutex_unlock ( &lock );
+  unlock();
 }
 
 void 
 StringModel::pluckvel() 
 {
+# ifdef __WIN32__
+  int pluckAt = double(rand() / double(RAND_MAX)) * (numMasses-2) + 1;
+# else
   int pluckAt = double(rand_r(&seed) / double(RAND_MAX)) * (numMasses-2) + 1;
+# endif
   //    std::cout << pluckAt << std::endl;
-  pthread_mutex_lock( &lock );
+  lock();
   // XXX NOOP
-  pthread_mutex_unlock ( &lock );
+  unlock();
 }
 
 void 

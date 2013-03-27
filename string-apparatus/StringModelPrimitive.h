@@ -165,9 +165,8 @@ public:
     glBindVertexArray ( vao_ );
 
       
-#ifdef LOCK_STRING
-    pthread_mutex_lock ( &(theString_->lock) );
-#endif
+    theString_->lock();
+
     if ( theString_->freshHistograms ) {
       points_.clear();
       indices_.clear();
@@ -212,9 +211,7 @@ public:
       theString_->freshHistograms = false;
     }
 
-#ifdef LOCK_STRING
-    pthread_mutex_unlock ( &(theString_->lock) );
-#endif
+    theString_->unlock();
 
     
     long int sizeofPoints = sizeof(glm::vec3)*points_.size();

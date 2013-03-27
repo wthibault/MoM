@@ -6,7 +6,13 @@
 #include <iostream>
 #include <cmath>
 #include <stdlib.h>
+
+#ifdef __WIN32__
+#include <windows.h>
+#else
 #include <pthread.h>
+#endif
+
 #include <RtAudio.h>
 #include <fftw3.h>
 
@@ -199,7 +205,19 @@ struct StringModel {
   double *yolder;
 
   unsigned int seed;
-  pthread_mutex_t lock;
+
+#ifdef __WIN32__
+  CRITICAL_SECTION cs;
+  void initLock() { InitializeCriticalSection ( &cs ); }
+  void lock() { EnterCriticalSection ( &cs ); }
+  void unlock() { LeaveCriticalSection ( &cs ); }
+#else
+  pthread_mutex_t mutex;
+  void initLock() { pthread_mutex_init ( &mutex, NULL); }
+  void lock() { pthread_mutex_lock ( &mutex ); }
+  void unlock() { pthread_mutex_unlock ( &mutex ); }
+#endif
+
 
   bool   vibratorOn;
   int    vibratorWaveform; // 0: sine; 1: sawtooth
