@@ -164,46 +164,52 @@ public:
     // draw a line based on histogram of positions
     glBindVertexArray ( vao_ );
 
-    points_.clear();
-    indices_.clear();
-    normals_.clear();
-    texCoords_.clear();
-
+      
 #ifdef LOCK_STRING
     pthread_mutex_lock ( &(theString_->lock) );
 #endif
+    if ( theString_->freshHistograms ) {
+      points_.clear();
+      indices_.clear();
+      normals_.clear();
+      texCoords_.clear();
 
-    float deltaX = 1.0 / theString_->numMasses;
 
-    theString_->histograms[0].minVal = 0;
-    theString_->histograms[0].maxVal = 0;
-    theString_->histograms[theString_->numMasses-1].minVal = 0;
-    theString_->histograms[theString_->numMasses-1].maxVal = 0;
-    
-    for ( int i = 0; i < theString_->numMasses; i++ ) {
-    //for ( int i = 1; i < theString_->numMasses-1; i++ ) {
-      float x,y0,y1,z;
-      x = 2*(i * deltaX)-1;
-      y0 = renderScale_ * theString_->histograms[i].minVal;
-      y1 = renderScale_ * theString_->histograms[i].maxVal;
-      z = 0;
-      points_.push_back( glm::vec3 ( x,y0,z ) );
-      points_.push_back( glm::vec3 ( x,y1,z ) );
-      normals_.push_back ( glm::vec3(0,0,1) );
-      normals_.push_back ( glm::vec3(0,0,1) );
-      texCoords_.push_back ( glm::vec2(i * deltaX, 0) );
-      texCoords_.push_back ( glm::vec2(i * deltaX, 1) );
+      float deltaX = 1.0 / theString_->numMasses;
+      
+      theString_->histograms[0].minVal = 0;
+      theString_->histograms[0].maxVal = 0;
+      theString_->histograms[theString_->numMasses-1].minVal = 0;
+      theString_->histograms[theString_->numMasses-1].maxVal = 0;
+      
+      for ( int i = 0; i < theString_->numMasses; i++ ) {
+	//for ( int i = 1; i < theString_->numMasses-1; i++ ) {
+	float x,y0,y1,z;
+	x = 2*(i * deltaX)-1;
+	y0 = renderScale_ * theString_->histograms[i].minVal;
+	y1 = renderScale_ * theString_->histograms[i].maxVal;
+	z = 0;
+	points_.push_back( glm::vec3 ( x,y0,z ) );
+	points_.push_back( glm::vec3 ( x,y1,z ) );
+	normals_.push_back ( glm::vec3(0,0,1) );
+	normals_.push_back ( glm::vec3(0,0,1) );
+	texCoords_.push_back ( glm::vec2(i * deltaX, 0) );
+	texCoords_.push_back ( glm::vec2(i * deltaX, 1) );
+	
+	indices_.push_back ( 2*i );   // since the loop starts at zero
+	indices_.push_back ( 2*i+1 );
+	// indices_.push_back ( 2*(i-1) );   // since the loop starts at one
+	//indices_.push_back ( 2*(i-1)+1 );
+	
+	theString_->histograms[i].clear();
+	//      theString_->histograms[i].minVal = -1e-6;
+	//      theString_->histograms[i].maxVal = +1e-6;
+	//      theString_->histograms[i].minVal = 100;
+	//      theString_->histograms[i].maxVal = -100;
+      }
 
-      indices_.push_back ( 2*i );   // since the loop starts at zero
-      indices_.push_back ( 2*i+1 );
-      // indices_.push_back ( 2*(i-1) );   // since the loop starts at one
-      //indices_.push_back ( 2*(i-1)+1 );
 
-      theString_->histograms[i].clear();
-      //      theString_->histograms[i].minVal = -1e-6;
-      //      theString_->histograms[i].maxVal = +1e-6;
-      //      theString_->histograms[i].minVal = 100;
-      //      theString_->histograms[i].maxVal = -100;
+      theString_->freshHistograms = false;
     }
 
 #ifdef LOCK_STRING

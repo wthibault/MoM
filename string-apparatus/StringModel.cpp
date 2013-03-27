@@ -116,6 +116,9 @@ StringModel::computeSamples ( double *soundout, unsigned int nBufferFrames )
 
   }
 
+
+  freshHistograms = true;
+
 #ifdef LOCK_STRING
   pthread_mutex_unlock(&lock);
 #endif
@@ -250,7 +253,8 @@ StringModel::StringModel ( int n,
       compressionThreshold ( -10.0 ),
       compressionRatio ( 0.75 ),
       numFramesToAnalyze ( 8 * _bufferFrames ),
-      ringBuffer ( numFramesToAnalyze * 2 )
+      ringBuffer ( numFramesToAnalyze * 2 ),
+      freshHistograms ( false )
 {
   std::cout << "StringModel N,K_t,mu,tau,ss: " 
 	    << numMasses << ',' 

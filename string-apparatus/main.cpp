@@ -436,7 +436,7 @@ int
 main(int argc, char** argv)
 {
   // the enclosing FLTK window
-  Fl_Window *window = new Fl_Window(winWidth, winHeight);
+  Fl_Window *window = new Fl_Window(winWidth, winHeight, "CSUEB Virtual String Apparatus");
 
   // the OpenGL subwindow
   MyWindow *mywindow = new MyWindow(0,0,winWidth,offsetWidgets,NULL);
