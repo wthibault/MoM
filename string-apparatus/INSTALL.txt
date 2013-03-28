@@ -1,0 +1,34 @@
+INSTALL.txt
+===========
+
+These are instructions for building the CSUEB Virtual String Simulator from source code.
+It's not very simple, since you have to build the (static) libraries needed.
+These are not all needed on all platforms.
+
+libfftw3 (3.3.3)
+glut (3.7.6)
+glew (1.9.0)
+RtAudio-4.0.10
+FLTK (1.3.2)
+
+Most of these can be installed in Ubuntu with apt-get or the like.
+They are also included with the source code as archives (either in string-apparatus folder or its win32/ssg-lib subfolder).
+(This varies with platform. XXX DETAILS PLEASE. XXX)
+
+To compile:
+git clone https://github.com/wthibault/MoM
+cd MoM/string-apparatus
+git submodule init
+git submodule update
+cd ssg
+make
+cd ..
+[build/install the libraries]
+make
+./string-apparatus
+
+(if it fails with a message about not connecting to audio,
+run "amixer" and exit to tickle ALSA, then try again.)
+
+
+
