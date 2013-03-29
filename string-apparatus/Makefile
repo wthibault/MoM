@@ -70,7 +70,8 @@ LIBS = $(RTAUDIO_DIR)/librtaudio.a \
 	/usr/local/lib/libfftw3.a \
 	/usr/local/lib/libfltk.a \
 	-ldsound -lwinmm\
-	-L../ssg/win32/ssg-lib/glut-3.7.6-bin -lglut32
+	-L../ssg/win32/ssg-lib/glut-3.7.6-bin -lglut32 \
+	-static-libgcc -static-libstdc++
 
 OPTS +=  -DNUM_MASSES=500
 endif
@@ -156,8 +157,12 @@ package :
 	rm -rf win32/StringApparatus
 	mkdir win32/StringApparatus
 	cp string-apparatus.exe win32/StringApparatus
+	cp ../../ssg/win32/ssg-lib/glut-3.7.6-bin/glut32.dll win32/StringApparatus
 	cp -r objfiles/ win32/StringApparatus/objfiles
 	cp -r shaders120/ win32/StringApparatus/shaders120
+	cd win32
+	rm -f StringApparatus-win32.zip
+	zip -r StringApparatus-win32.zip StringApparatus
 endif
 
 clean :
