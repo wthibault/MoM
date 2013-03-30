@@ -25,12 +25,14 @@ ifeq   "$(HOST_PLATFORM)" "x86_64-linux-gnu"
 # for both , only not static linked...
 FFTW = $(shell pkg-config fftw3 --libs)
 RTAUDIO_DIR = ./rtaudio-4.0.10
-INCLUDES = -I$(INC_DIR) -I$(RTAUDIO_DIR) $(shell pkg-config ftgl --cflags) $(shell pkg-config fftw3 --cflags)
+INCLUDES = -I$(INC_DIR) -I$(RTAUDIO_DIR) $(shell pkg-config ftgl --cflags) $(shell pkg-config fftw3 --cflags) \
+	-Ioscpack
 LIBS = -lGL -lGLU -lglut -lGLEW \
 	$(shell pkg-config ftgl --libs) \
 	-lpthread $(FFTW) \
-	$(RTAUDIO_DIR)/librtaudio.a -lasound -lpthread
-OPTS +=  -DNUM_MASSES=1000
+	$(RTAUDIO_DIR)/librtaudio.a -lasound -lpthread \
+	osc.o oscpack/osc/OscReceivedElements.o oscpack/ip/posix/UdpSocket.o
+OPTS +=  -DNUM_MASSES=1000 -DUSE_OSC
 endif
 
 # for macosx
@@ -143,6 +145,9 @@ StringModel.o : StringModel.h StringModel.cpp
 
 gui.o : gui.h gui.cpp 
 	g++ $(OPTS) -c gui.cpp $(INCLUDES)
+
+osc.o : osc.h osc.cpp 
+	g++ $(OPTS) -c osc.cpp $(INCLUDES)
 
 objfiles/string-apparatus.obj : blender/string-apparatus.obj
 	cp blender/string-apparatus.obj objfiles

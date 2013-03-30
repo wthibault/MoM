@@ -1,5 +1,6 @@
 #include "gui.h"
 #include <algorithm>
+#include <map>
 #include "StringModel.h"
 using namespace std;
 
@@ -15,6 +16,9 @@ const float maxVibAmp = 0.005;
 const float incrFine = 5.0;
 
 const char *floatFormat = "%8.5f";
+
+std::map < std::string, Fl_Slider* > guiSliders;
+
 
 float 
 getFloatValue ( void *input )
@@ -216,7 +220,9 @@ static void sawtoothButtonCallback ( Fl_Widget *o )
 /////////////////////////////////////////////////////////////
 
 Fl_Group *
-makeCoarseFineControl ( int w, int h, const char *label, 
+makeCoarseFineControl ( int w, int h, 
+			const char *label, 
+			const char *name, // the OSC parameter name
 			Fl_Callback *fCoarseSlider, 
 			Fl_Callback *fFineSlider,
 			Fl_Callback *fInput,
@@ -244,6 +250,8 @@ makeCoarseFineControl ( int w, int h, const char *label,
   Fl_Hor_Nice_Slider *coarseSlider = new Fl_Hor_Nice_Slider( 0,0, horizRemainEnd, 2*h/3 );
   coarseSlider->color ( FL_GRAY, FL_DARK_YELLOW );
   coarseSlider->callback ( fCoarseSlider, input );
+
+  guiSliders[name] = coarseSlider;
 
   Fl_Hor_Nice_Slider *fineSlider =   new Fl_Hor_Nice_Slider( 0,0, horizRemainEnd, h/3 );
   fineSlider->color ( FL_GRAY, FL_DARK_YELLOW );
@@ -307,14 +315,14 @@ makeVibControls(int x, int y, int width, int height, int coarsefineHeight)
 
   widgetPacker->add(h);
 
-  Fl_Group *pack3 = makeCoarseFineControl(width,coarsefineHeight,"Vib.Freq.", 
+  Fl_Group *pack3 = makeCoarseFineControl(width,coarsefineHeight,"Vib.Freq.", "VibFreq",
 					  sliderVibFreqCoarseCallback, 
 					  sliderVibFreqFineCallback, 
 					  inputVibFreqCallback,
 					  initVibFreq);
   pack3->tooltip ("Control the vibrator frequency.");
   widgetPacker->add(pack3);
-  Fl_Group *pack4 = makeCoarseFineControl(width,coarsefineHeight,"Vib. Amp.", 
+  Fl_Group *pack4 = makeCoarseFineControl(width,coarsefineHeight,"Vib. Amp.", "VibAmp",
 					  sliderVibAmpCoarseCallback, 
 					  sliderVibAmpFineCallback, 
 					  inputVibAmpCallback,
@@ -333,7 +341,7 @@ makeNewStringControls(int x, int y, int width, int height, int coarsefineHeight 
   Fl_Pack *widgetPacker = new Fl_Pack( x,y,width,height);
   widgetPacker->spacing(10);
 
-  Fl_Group *pack1 = makeCoarseFineControl ( width,coarsefineHeight,"Hanger Mass", 
+  Fl_Group *pack1 = makeCoarseFineControl ( width,coarsefineHeight,"Hanger Mass", "HangerMass", 
 					    sliderHangerMassCoarseCallback, 
 					    sliderHangerMassFineCallback, 
 					    inputHangerMassCallback,
@@ -342,7 +350,7 @@ makeNewStringControls(int x, int y, int width, int height, int coarsefineHeight 
   pack1->tooltip("Control the amount of mass on the hanger at the end of the string.  The tension on this string is due to this mass being accelerated by gravity.");
   widgetPacker->add(pack1);
 
-  Fl_Group *pack2 = makeCoarseFineControl ( width,coarsefineHeight,"Decay Time", 
+  Fl_Group *pack2 = makeCoarseFineControl ( width,coarsefineHeight,"Decay Time", "DecayTime",
 					    sliderDecayTimeCoarseCallback, 
 					    sliderDecayTimeFineCallback, 
 					    inputDecayTimeCallback,
@@ -350,7 +358,7 @@ makeNewStringControls(int x, int y, int width, int height, int coarsefineHeight 
   pack2->tooltip("Control the time is takes for a vibration in the strinp to die down.");
   widgetPacker->add(pack2);
 
-  Fl_Group *pack3 = makeCoarseFineControl ( width,coarsefineHeight,"Mass Density", 
+  Fl_Group *pack3 = makeCoarseFineControl ( width,coarsefineHeight,"Mass Density", "MassDensity",
 					    sliderMassDensityCoarseCallback, 
 					    sliderMassDensityFineCallback, 
 					    inputMassDensityCallback,
@@ -373,4 +381,15 @@ makeApparatusControls ( int winWidth, int winHeight, int offsetWidgets, int coar
   packer->add ( new Fl_Window ( winWidth/2, winHeight/2 ) ); // ?????
   packer->end();
   return packer;
+}
+
+
+void setSlider ( const char* sliderName, float value )
+{
+  try {
+    Fl_Slider *slider = guiSliders[sliderName];
+    slider->value(value);
+  } catch (...) {
+    std::cout << "bad slider: " << sliderName << std::endl;
+  }
 }

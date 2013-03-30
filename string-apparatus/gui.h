@@ -7,5 +7,11 @@
 #include <FL/Fl_Hor_Nice_Slider.H>
 #include <FL/Fl_Light_Button.H>
 #include <FL/Fl_Toggle_Button.H>
+#include <map>
+#include <string>
 
 Fl_Pack *makeApparatusControls ( int w, int h, int offsetWidgets, int coarsefineHeight );
+
+void setSlider ( const char* sliderName, float value );
+
+extern std::map<std::string, Fl_Slider*> guiSliders;

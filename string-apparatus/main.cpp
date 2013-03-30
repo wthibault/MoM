@@ -23,6 +23,12 @@
 #include <fftw3.h>
 #include "gui.h"
 
+#ifdef USE_OSC
+#include "osc.h"
+#include <pthread.h>
+#include <map>
+#endif
+
 using namespace glm;
 
 //
@@ -190,7 +196,7 @@ initOpacityValues ( float values[], int size )
   const float EPSILON = 1e-6;
   for ( int i = 0; i < size; i++ ) {
     float x = float(i) / float(size);
-    values[i] = min ( 1.0, 1.0 / (M_PI * sqrt ( 1 - (2*x-1) * (2*x-1) )) );
+    values[i] = std::min ( 1.0, 1.0 / (M_PI * sqrt ( 1 - (2*x-1) * (2*x-1) )) );
   }
 }
 
@@ -204,9 +210,16 @@ class MyWindow : public Fl_Gl_Window {
   ModelNode *root;
   Camera     camera;
   Instance *loadBackgroundScene();
+#ifdef USE_OSC
+  OscParams          oscParams;
+  pthread_mutex_t    oscMutex;
+  pthread_t          oscThreadId;
+  void               oscCollectInput();
+#endif
 public:
   MyWindow ( int x, int y , int w, int h, const char *L );
   void init();
+
 };
 
 MyWindow::MyWindow ( int x, int y , int w, int h, const char *L )
@@ -216,6 +229,9 @@ MyWindow::MyWindow ( int x, int y , int w, int h, const char *L )
   camera.enableTrackball(true);
   camera.setDistance ( 2 );
   end();
+#ifdef USE_OSC
+  pthread_mutex_init ( &oscMutex, NULL );
+#endif
 }
 
 
@@ -376,9 +392,34 @@ MyWindow::init()
   fftmat->program = fftmat->loadShaders ( "PhongShading" );
   fftTransform->setMaterial(fftmat);
 
+
+#ifdef USE_OSC
+  // start the OSC thread
+  if ( pthread_create ( &oscThreadId, 
+			NULL, 
+			oscThreadFunction,  
+			static_cast<void *> (&oscParams) ) ) {
+    cout << "error creating OSC thread!" << endl;
+    exit(1);
+  }
+#endif
+  
   //  std::cout << "MyWindow::init done" << std::endl;
+
+  
+
 }
 
+void
+MyWindow::oscCollectInput()
+{
+  map<std::string, float>::iterator i;
+  for ( i = oscParams.value.begin(); i != oscParams.value.end(); i++ ) {
+    guiSliders[i->first]->value ( i->second );
+    guiSliders[i->first]->do_callback();
+    oscParams.changed[i->first] = false;
+  }
+}
 
 void 
 MyWindow::draw() {
@@ -388,6 +429,7 @@ MyWindow::draw() {
     camera.setupPerspective( w(), h() );
   }
   root->update ( 0.033 );
+  oscCollectInput();
   glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
   camera.setDistance ( 1.0 );
   camera.draw(root);
