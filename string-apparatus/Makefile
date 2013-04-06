@@ -43,15 +43,17 @@ INCLUDES = -I$(INC_DIR) \
 	-framework OpenGL \
 	-framework GLUT -DUSE_APPLE_VERTEXARRAYS \
 	-I$(RTAUDIO_DIR) \
-	-I/usr/X11/include -I/usr/X11/include/freetype2
+	-I/usr/X11/include -I/usr/X11/include/freetype2 \
+	-Ioscpack
 
 LIBS = $(RTAUDIO_DIR)/librtaudio.a \
 	-lpthread -framework CoreAudio -framework CoreFoundation \
 	-L/usr/X11/lib \
 	/usr/local/lib/libftgl.a \
 	-L/usr/local/lib -lfftw3 \
-	-headerpad_max_install_names
-OPTS +=  -DNUM_MASSES=256
+	-headerpad_max_install_names \
+	osc.o oscpack/osc/OscReceivedElements.o oscpack/ip/posix/UdpSocket.o
+OPTS +=  -DNUM_MASSES=256 -DUSE_OSC
 POST_BUILD_STEP = cp string-apparatus macosx/StringApparatus.app/Contents/MacOS
 endif
 
