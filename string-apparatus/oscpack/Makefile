@@ -18,7 +18,7 @@ UNITTESTS=OscUnitTests
 SEND=OscSendTests
 RECEIVE=OscReceiveTest
 DUMP=OscDump
-KYMA=kyma
+
 
 INCLUDEDIR = oscpack
 LIBNAME = liboscpack
@@ -28,9 +28,6 @@ LIBFILENAME = $(LIBSONAME).1.0.2
 #Test and example source
 SENDSOURCES = ./tests/OscSendTests.cpp ./osc/OscOutboundPacketStream.cpp ./osc/OscTypes.cpp ./ip/posix/NetworkingUtils.cpp ./ip/posix/UdpSocket.cpp ./ip/IpEndpointName.cpp
 SENDOBJECTS = $(SENDSOURCES:.cpp=.o)
-
-KYMA = ./examples/kyma.cpp ./osc/OscOutboundPacketStream.cpp ./osc/OscTypes.cpp ./ip/posix/NetworkingUtils.cpp ./ip/posix/UdpSocket.cpp ./ip/IpEndpointName.cpp
-KYMAOBJECTS = $(KYMASOURCES:.cpp=.o)
 
 RECEIVESOURCES = ./tests/OscReceiveTest.cpp ./osc/OscTypes.cpp ./osc/OscReceivedElements.cpp ./osc/OscPrintReceivedElements.cpp ./ip/posix/NetworkingUtils.cpp ./ip/posix/UdpSocket.cpp
 RECEIVEOBJECTS = $(RECEIVESOURCES:.cpp=.o)
@@ -47,7 +44,7 @@ LIBSOURCES = ./ip/IpEndpointName.cpp \
 	./osc/OscOutboundPacketStream.cpp ./osc/OscPrintReceivedElements.cpp ./osc/OscReceivedElements.cpp ./osc/OscTypes.cpp
 LIBOBJECTS = $(LIBSOURCES:.cpp=.o)
 
-all:	unittests send receive dump kyma
+all:	unittests send receive dump 
 
 unittests : $(UNITTESTOBJECTS)
 	@if [ ! -d bin ] ; then mkdir bin ; fi
@@ -55,9 +52,6 @@ unittests : $(UNITTESTOBJECTS)
 send : $(SENDOBJECTS)
 	@if [ ! -d bin ] ; then mkdir bin ; fi
 	$(CXX) -o bin/$(SEND) $+ $(LIBS) 
-kyma : $(KYMAOBJECTS)
-	@if [ ! -d bin ] ; then mkdir bin ; fi
-	$(CXX) -o bin/$(KYMA) $+ $(LIBS) 
 receive : $(RECEIVEOBJECTS)
 	@if [ ! -d bin ] ; then mkdir bin ; fi
 	$(CXX) -o bin/$(RECEIVE) $+ $(LIBS) 

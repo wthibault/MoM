@@ -394,6 +394,7 @@ MyWindow::init()
 
 
 #ifdef USE_OSC
+  std::cout << "MyWindow::oscParams=" << &oscParams << std::endl;
   // start the OSC thread
   if ( pthread_create ( &oscThreadId, 
 			NULL, 
@@ -414,11 +415,37 @@ void
 MyWindow::oscCollectInput()
 {
   map<std::string, float>::iterator i;
+  pthread_mutex_lock ( &(oscParams.mutex) );
   for ( i = oscParams.value.begin(); i != oscParams.value.end(); i++ ) {
-    guiSliders[i->first]->value ( i->second );
-    guiSliders[i->first]->do_callback();
-    oscParams.changed[i->first] = false;
+
+    // debug
+    //        std::cout << "oscCollectInput: " << i->first << std::endl;
+    //        if ( guiSliders.find(i->first) != guiSliders.end() ) {
+    //          std::cout << "oscCollectInput: found" << i->first << std::endl;
+    //        }
+	//	if ( oscParams.changed[i->first] ) {
+	//        std::cout << "oscCollectInput: changed[" << i->first << "]\n";
+	//       } else {
+	//        std::cout << "oscCollectInput: NOT changed[" << i->first << "]\n";
+	//       }
+
+    if ( guiSliders.find(i->first) != guiSliders.end() ) {
+      if ( oscParams.changed[i->first] ) {
+	std::cout << "oscCollectInput: found&changed " << i->first << std::endl;
+	guiSliders[i->first]->value ( i->second );
+	guiSliders[i->first]->do_callback();
+	oscParams.changed[i->first] = false;
+      }
+    } else if ( guiButtons.find(i->first) != guiButtons.end() ) {
+      if ( oscParams.changed[i->first] ) {
+	std::cout << "oscCollectInput: found&changed " << i->first << std::endl;
+	guiButtons[i->first]->value ( i->second );
+	guiButtons[i->first]->do_callback();
+	oscParams.changed[i->first] = false;
+      }
+    }
   }
+  pthread_mutex_unlock ( &(oscParams.mutex) );
 }
 
 void 

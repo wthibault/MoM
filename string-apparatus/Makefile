@@ -128,6 +128,7 @@ string-apparatus : main.cpp \
 		FFTPrimitive.h \
 		StringModel.o \
 		gui.o \
+		osc.o \
 		$(SSG_INCS) \
 		$(LIB_DIR)/ssg.a 
 #		$(SSG_DATA)/objfiles/string-apparatus.obj 
