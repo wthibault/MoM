@@ -428,18 +428,21 @@ MyWindow::oscCollectInput()
 	//       } else {
 	//        std::cout << "oscCollectInput: NOT changed[" << i->first << "]\n";
 	//       }
-    if ( guiSliders.find(i->first) != guiSliders.end() )
+
+    if ( guiSliders.find(i->first) != guiSliders.end() ) {
       if ( oscParams.changed[i->first] ) {
-      std::cout << "oscCollectInput: found&changed " << i->first << std::endl;
-      guiSliders[i->first]->value ( i->second );
-      guiSliders[i->first]->do_callback();
-      oscParams.changed[i->first] = false;
-    } else if ( guiButtons.find(i->first) != guiButtons.end()
-		&& oscParams.changed[i->first] ) {
-      std::cout << "oscCollectInput: found&changed " << i->first << std::endl;
-      guiButtons[i->first]->value ( i->second );
-      guiButtons[i->first]->do_callback();
-      oscParams.changed[i->first] = false;
+	std::cout << "oscCollectInput: found&changed " << i->first << std::endl;
+	guiSliders[i->first]->value ( i->second );
+	guiSliders[i->first]->do_callback();
+	oscParams.changed[i->first] = false;
+      }
+    } else if ( guiButtons.find(i->first) != guiButtons.end() ) {
+      if ( oscParams.changed[i->first] ) {
+	std::cout << "oscCollectInput: found&changed " << i->first << std::endl;
+	guiButtons[i->first]->value ( i->second );
+	guiButtons[i->first]->do_callback();
+	oscParams.changed[i->first] = false;
+      }
     }
   }
   pthread_mutex_unlock ( &(oscParams.mutex) );
