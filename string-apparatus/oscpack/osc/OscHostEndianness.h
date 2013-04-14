@@ -37,6 +37,8 @@
     please let me know! I've tried a few things which don't work.
 */
 
+#define OSC_HOST_LITTLE_ENDIAN 1
+
 #if defined(OSC_HOST_LITTLE_ENDIAN) || defined(OSC_HOST_BIG_ENDIAN)
 
 // you can define one of the above symbols from the command line

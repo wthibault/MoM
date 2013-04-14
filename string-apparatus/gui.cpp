@@ -18,6 +18,7 @@ const float incrFine = 5.0;
 const char *floatFormat = "%8.5f";
 
 std::map < std::string, Fl_Slider* > guiSliders;
+std::map < std::string, Fl_Button* > guiButtons;
 
 
 float 
@@ -283,10 +284,14 @@ makeVibControls(int x, int y, int width, int height, int coarsefineHeight)
   onbut->tooltip ("Turn the vibrator on or off.");
   h->add ( onbut );
 
+  guiButtons["VibOn"] = onbut;
+
   Fl_Button *o = new Fl_Light_Button (0,20, 140,20, "constant energy");
   o->tooltip("Turning on constant energy will cause the vibrator to have less amplitude at higher frequencies.  Turning it off makes it easier to find antinodes at higher frequencies.");
   o->callback ( vibConstantPowerCallback );
   h->add(o);
+
+  guiButtons["VibConstantEnergy"] = o;
 
   Fl_Pack *buts = new Fl_Pack ( 150,0, 20, coarsefineHeight, "" );
   buts->type(Fl_Pack::VERTICAL);
@@ -300,6 +305,8 @@ makeVibControls(int x, int y, int width, int height, int coarsefineHeight)
   o->callback(sineButtonCallback);
   buts->add(o);
 
+  guiButtons["VibSine"] = o;
+
   o = new Fl_Button(0, 0, 20, 20, "sawtooth");
   o->tooltip("Set vibrator waveform to sawtooth");
   o->type(102);
@@ -308,6 +315,8 @@ makeVibControls(int x, int y, int width, int height, int coarsefineHeight)
   o->callback(sawtoothButtonCallback);
   buts->add(o);
   buts->end();
+
+  guiButtons["VibSawtooth"] = o;
 
   h->add(buts);
 
@@ -391,5 +400,15 @@ void setSlider ( const char* sliderName, float value )
     slider->value(value);
   } catch (...) {
     std::cout << "bad slider: " << sliderName << std::endl;
+  }
+}
+
+void setButton ( const char* buttonName, int value )
+{
+  try {
+    Fl_Button *button = guiButtons[buttonName];
+    button->value(value);
+  } catch (...) {
+    std::cout << "bad button: " << buttonName << std::endl;
   }
 }

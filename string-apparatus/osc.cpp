@@ -79,12 +79,15 @@ IipPacketListener::handleStringApp ( const osc::ReceivedMessage& m )
     fval = arg->AsFloat();
   }
 
-  std::cout << "handleStringApp " << name << ':' << fval << std::endl;
 
   pthread_mutex_lock ( &(_params->mutex) );
   if ( _params->value[name] != fval ) {
     _params->value[name] = fval;
     _params->changed[name] = true;
+    std::cout << "handleStringApp " << name << ':' << fval 
+	      << "params=" << _params 
+	      << std::endl;
+
   }
   pthread_mutex_unlock ( &(_params->mutex) );
 

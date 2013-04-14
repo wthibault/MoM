@@ -13,5 +13,7 @@
 Fl_Pack *makeApparatusControls ( int w, int h, int offsetWidgets, int coarsefineHeight );
 
 void setSlider ( const char* sliderName, float value );
+void setButton ( const char* buttonName, int value );
 
 extern std::map<std::string, Fl_Slider*> guiSliders;
+extern std::map<std::string, Fl_Button*> guiButtons;
