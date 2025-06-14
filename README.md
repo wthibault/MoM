@@ -1,4 +1,10 @@
 MoM source code examples
+========================
+after cloning, run
+
+  git submodule update --init --recursive
+
+in order to fetch the ssg graphics library used.
 
 Pluck
 

@@ -36,17 +36,21 @@ OPTS +=  -DNUM_MASSES=1000 -DUSE_OSC
 endif
 
 # for macosx
-# NOTE for mac you have to use the GLSL 1.2 shaders....
-ifeq   "$(HOST_PLATFORM)" "i686-apple-darwin11"
-RTAUDIO_DIR = rtaudio-4.0.10
+# ? NOTE for mac you have to use the GLSL 1.2 shaders....
+ifeq   "$(HOST_PLATFORM)" "arm64-apple-darwin24.5.0" # "i686-apple-darwin11"
+#RTAUDIO_DIR = rtaudio-4.0.10
+RTAUDIO_INCLUDE_DIR = /opt/homebrew/include/rtaudio
+FFTW_INCLUDE_DIR = /opt/homebrew/include/
 INCLUDES = -I$(INC_DIR) \
 	-framework OpenGL \
 	-framework GLUT -DUSE_APPLE_VERTEXARRAYS \
-	-I$(RTAUDIO_DIR) \
+	-I$(RTAUDIO_INCLUDE_DIR) \
+	-I$(FFTW_INCLUDE_DIR) \
 	-I/usr/X11/include -I/usr/X11/include/freetype2 \
 	-Ioscpack
-
-LIBS = $(RTAUDIO_DIR)/librtaudio.a \
+LIB_DIR = /opt/homebrew/lib
+LIBS = $(LIB_DIR)/librtaudio.a \
+	$(LIB_DIR)/libfftw3.a \
 	-lpthread -framework CoreAudio -framework CoreFoundation \
 	-L/usr/X11/lib \
 	/usr/local/lib/libftgl.a \
@@ -55,6 +59,8 @@ LIBS = $(RTAUDIO_DIR)/librtaudio.a \
 	osc.o oscpack/osc/OscReceivedElements.o oscpack/ip/posix/UdpSocket.o
 OPTS +=  -DNUM_MASSES=256 -DUSE_OSC
 POST_BUILD_STEP = cp string-apparatus macosx/StringApparatus.app/Contents/MacOS
+OPTS += -std=c++11
+
 endif
 
 
