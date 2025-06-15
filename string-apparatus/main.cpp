@@ -48,7 +48,9 @@ void error_callback(RtAudioErrorType type,
 {
   std::cout << errorText << std::endl;
 }
-RtAudio dac(RtAudio::UNSPECIFIED,&error_callback);
+
+//RtAudio dac(RtAudio::UNSPECIFIED,&error_callback);
+RtAudio dac(RtAudio::MACOSX_CORE,&error_callback);
 
 const char *shader = "PhongShading";
 
@@ -417,6 +419,7 @@ MyWindow::init()
 
 }
 
+#ifdef USE_OSC
 void
 MyWindow::oscCollectInput()
 {
@@ -453,6 +456,7 @@ MyWindow::oscCollectInput()
   }
   pthread_mutex_unlock ( &(oscParams.mutex) );
 }
+#endif
 
 void 
 MyWindow::draw() {
@@ -462,7 +466,10 @@ MyWindow::draw() {
     camera.setupPerspective( w(), h() );
   }
   root->update ( 0.033 );
+#ifdef USE_OSC
   oscCollectInput();
+#endif
+  
   glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
   camera.setDistance ( 1.0 );
   camera.draw(root);

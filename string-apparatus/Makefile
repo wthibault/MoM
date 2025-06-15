@@ -53,12 +53,13 @@ LIB_DIR = /opt/homebrew/lib
 LIBS = $(LIB_DIR)/librtaudio.a \
 	$(LIB_DIR)/libfftw3.a \
 	-lpthread -framework CoreAudio -framework CoreFoundation \
-	-L/usr/X11/lib \
 	/opt/homebrew/lib/libftgl.a \
 	-L/opt/homebrew/lib -lfftw3 \
+	/opt/homebrew/lib/librtaudio.a \
 	-headerpad_max_install_names \
 	osc.o oscpack/osc/OscReceivedElements.o oscpack/ip/posix/UdpSocket.o
-OPTS +=  -DNUM_MASSES=256 -DUSE_OSC
+#OPTS +=  -DNUM_MASSES=256 -DUSE_OSC
+OPTS +=  -DNUM_MASSES=256
 POST_BUILD_STEP = cp string-apparatus macosx/StringApparatus.app/Contents/MacOS
 OPTS += -std=c++11 -Wno-deprecated-register -DGL_SILENCE_DEPRECATION=1
 
