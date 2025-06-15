@@ -42,7 +42,13 @@ ModelNode *root;
 StringModel *theString;
 
 // audio output handle
-RtAudio dac;
+//RtAudio dac;
+void error_callback(RtAudioErrorType type,
+		    const std::string &errorText )
+{
+  std::cout << errorText << std::endl;
+}
+RtAudio dac(RtAudio::UNSPECIFIED,&error_callback);
 
 const char *shader = "PhongShading";
 
@@ -172,13 +178,13 @@ keyboard (unsigned char key, int x, int y)
     //  case 'd' : theString->print(); break;
 
   case 27: /* ESC */
-    try {
+    //    try {
       // Stop the stream
       dac.stopStream();
-    }
-    catch (RtError& e) {
-      e.printMessage();
-    }
+    // }
+    // catch (RtAudio::RtError& e) {
+    //   e.printMessage();
+    // }
 	  
     if (dac.isStreamOpen()) dac.closeStream();
     exit(0);
@@ -331,7 +337,7 @@ MyWindow::init()
   //  options.flags |= RTAUDIO_HOG_DEVICE;
 
   dac.showWarnings ( true );
-  try { 
+  //  try { 
     dac.openStream ( &parameters, 
 		     NULL, 
 		     RTAUDIO_FLOAT64,
@@ -341,12 +347,12 @@ MyWindow::init()
 		     (void *)theString,
 		     &options );
     dac.startStream();
-  }
-  catch ( RtError& e ) {
-    std::cout << "\nexception on dac:\n";
-    e.printMessage();
-    exit(0);
-  }
+  // }
+  // catch ( RTAudio::RtError& e ) {
+  //   std::cout << "\nexception on dac:\n";
+  //   e.printMessage();
+  //   exit(0);
+  // }
 
   // the rendering
   StringModelHistogramPrimitive *smp = new StringModelHistogramPrimitive ( theString );

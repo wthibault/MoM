@@ -41,6 +41,7 @@ ifeq   "$(HOST_PLATFORM)" "arm64-apple-darwin24.5.0" # "i686-apple-darwin11"
 #RTAUDIO_DIR = rtaudio-4.0.10
 RTAUDIO_INCLUDE_DIR = /opt/homebrew/include/rtaudio
 FFTW_INCLUDE_DIR = /opt/homebrew/include/
+SSG_DIR=../ssg
 INCLUDES = -I$(INC_DIR) \
 	-framework OpenGL \
 	-framework GLUT -DUSE_APPLE_VERTEXARRAYS \
@@ -53,13 +54,13 @@ LIBS = $(LIB_DIR)/librtaudio.a \
 	$(LIB_DIR)/libfftw3.a \
 	-lpthread -framework CoreAudio -framework CoreFoundation \
 	-L/usr/X11/lib \
-	/usr/local/lib/libftgl.a \
-	-L/usr/local/lib -lfftw3 \
+	/opt/homebrew/lib/libftgl.a \
+	-L/opt/homebrew/lib -lfftw3 \
 	-headerpad_max_install_names \
 	osc.o oscpack/osc/OscReceivedElements.o oscpack/ip/posix/UdpSocket.o
 OPTS +=  -DNUM_MASSES=256 -DUSE_OSC
 POST_BUILD_STEP = cp string-apparatus macosx/StringApparatus.app/Contents/MacOS
-OPTS += -std=c++11
+OPTS += -std=c++11 -Wno-deprecated-register -DGL_SILENCE_DEPRECATION=1
 
 endif
 
@@ -101,7 +102,7 @@ SSG_INCS = $(INC_DIR)/ssg.h \
 
 
 ###### 
-FLTKCONFIG   = /usr/local/bin/fltk-config
+FLTKCONFIG   = fltk-config
 CXX          = $(shell $(FLTKCONFIG) --cxx)
 #CXXFLAGS     = $(shell $(FLTKCONFIG) --cxxflags) -g -Wall -I. -I$(SSG_DIR)/include
 INCLUDES    += $(shell $(FLTKCONFIG) --cxxflags)
@@ -136,13 +137,13 @@ string-apparatus : main.cpp \
 		gui.o \
 		osc.o \
 		$(SSG_INCS) \
-		$(LIB_DIR)/ssg.a 
+		$(SSG_DIR)/src/ssg.a 
 #		$(SSG_DATA)/objfiles/string-apparatus.obj 
 	g++ $(OPTS) -o string-apparatus $(INCLUDES) \
 		main.cpp \
 		StringModel.o \
 		gui.o \
-		$(LIB_DIR)/ssg.a \
+		$(SSG_DIR)/src/ssg.a \
 		-I$(RTAUDIO_DIR)  \
 		$(LIBS) \
 		$(LINKFLTK_ALL)

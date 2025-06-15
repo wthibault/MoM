@@ -39,7 +39,7 @@ class Histogram {
 	   bins = new unsigned int [numBins];
 	   clear(); 
 	 }
-  ~Histogram () { delete bins; }
+  ~Histogram () { delete[] bins; }
 
   void clear () {
 #if USE_HISTOGRAM_BINS
